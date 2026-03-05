@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-limitless",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/sync-trainerhill",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/aggregate-stats",
+      "schedule": "0 3 * * 0"
+    }
+  ]
+}
