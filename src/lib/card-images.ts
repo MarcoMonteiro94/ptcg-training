@@ -1,238 +1,261 @@
 /**
- * Maps card names (as used in our decklists) to pokemontcg.io card image URLs.
+ * Maps card names to Limitless TCG CDN card image URLs.
  *
- * Image CDN: https://images.pokemontcg.io/{set}/{number}.png
- * High-res:  https://images.pokemontcg.io/{set}/{number}_hires.png
+ * CDN pattern: https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/{SET}/{SET}_{NUM}_R_EN_LG.png
  *
- * Uses most recent Standard-legal printings (Scarlet & Violet era).
+ * All mappings verified against actual Limitless TCG card pages and decklists.
  */
 
-const BASE = "https://images.pokemontcg.io";
+const BASE = "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci";
+
+function cardUrl(set: string, num: number): string {
+  return `${BASE}/${set}/${set}_${String(num).padStart(3, "0")}_R_EN_LG.png`;
+}
 
 /** Set code + card number for each card name */
 const CARD_DATA: Record<string, string> = {
   // --- Pokemon: Dragapult line ---
-  "Dreepy": "sv6/88",
-  "Drakloak": "sv6/89",
-  "Dragapult ex": "sv6/91",
+  "Dreepy": cardUrl("TWM", 128),
+  "Drakloak": cardUrl("TWM", 129),
+  "Dragapult ex": cardUrl("TWM", 130),
 
   // --- Pokemon: Charizard line ---
-  "Charmander": "sv3/26",
-  "Charmeleon": "sv3/27",
-  "Charizard ex": "sv3/54",
+  "Charmander": cardUrl("PAF", 7),
+  "Charmeleon": cardUrl("PFL", 12),
+  "Charizard ex": cardUrl("OBF", 125),
 
   // --- Pokemon: Dusknoir line ---
-  "Duskull": "sv6/70",
-  "Dusclops": "sv6/71",
-  "Dusknoir": "sv6/72",
+  "Duskull": cardUrl("PRE", 35),
+  "Dusclops": cardUrl("PRE", 36),
+  "Dusknoir": cardUrl("PRE", 37),
 
   // --- Pokemon: Gardevoir line ---
-  "Ralts": "sv2/67",
-  "Kirlia": "sv2/68",
-  "Gardevoir ex": "sv2/86",
+  "Ralts": cardUrl("MEG", 58),
+  "Kirlia": cardUrl("MEG", 59),
+  "Gardevoir ex": cardUrl("SVI", 86),
 
   // --- Pokemon: Pidgeot line ---
-  "Pidgey": "sv3pt5/16",
-  "Pidgeotto": "sv3pt5/17",
-  "Pidgeot ex": "sv3pt5/54",
+  "Pidgey": cardUrl("MEW", 16),
+  "Pidgeotto": cardUrl("OBF", 163),
+  "Pidgeot ex": cardUrl("OBF", 164),
 
   // --- Pokemon: Alakazam line ---
-  "Abra": "sv8/63",
-  "Kadabra": "sv8/64",
-  "Alakazam ex": "sv8/65",
+  "Abra": cardUrl("MEW", 63),
+  "Kadabra": cardUrl("MEW", 64),
+  "Alakazam ex": cardUrl("MEW", 65),
 
   // --- Pokemon: Greninja line ---
-  "Froakie": "sv8/36",
-  "Frogadier": "sv8/37",
-  "Greninja ex": "sv8/38",
+  "Froakie": cardUrl("TWM", 56),
+  "Frogadier": cardUrl("TWM", 57),
+  "Greninja ex": cardUrl("TWM", 106),
 
   // --- Pokemon: Blaziken line ---
-  "Torchic": "sv8/22",
-  "Combusken": "sv8/23",
-  "Blaziken": "sv8/24",
+  "Torchic": cardUrl("DRI", 40),
+  "Combusken": cardUrl("DRI", 41),
+  "Blaziken": cardUrl("DRI", 42),
 
   // --- Pokemon: Conkeldurr line ---
-  "Timburr": "sv8/75",
-  "Gurdurr": "sv8/76",
-  "Conkeldurr": "sv8/77",
+  "Timburr": cardUrl("TWM", 103),
+  "Gurdurr": cardUrl("TWM", 104),
+  "Conkeldurr": cardUrl("TWM", 105),
 
   // --- Pokemon: Hydreigon line ---
-  "Deino": "sv6/105",
-  "Zweilous": "sv6/106",
-  "Hydreigon ex": "sv6/107",
+  "Deino": cardUrl("WHT", 65),
+  "Zweilous": cardUrl("WHT", 66),
+  "Hydreigon ex": cardUrl("WHT", 67),
 
   // --- Pokemon: Crustle line ---
-  "Dwebble": "sv8/80",
-  "Crustle": "sv8/81",
+  "Dwebble": cardUrl("DRI", 11),
+  "Crustle": cardUrl("DRI", 12),
 
   // --- Pokemon: Lucario line ---
-  "Riolu": "sv8/72",
-  "Lucario": "sv8/73",
-  "Mega Lucario ex": "sv8pt5/18",
+  "Riolu": cardUrl("MEG", 76),
+  "Lucario": cardUrl("SVI", 114),
+  "Mega Lucario ex": cardUrl("MEG", 77),
 
   // --- Pokemon: Hariyama line ---
-  "Makuhita": "sv8/78",
-  "Hariyama": "sv8/79",
+  "Makuhita": cardUrl("MEG", 72),
+  "Hariyama": cardUrl("MEG", 73),
 
   // --- Pokemon: Ogerpon ---
-  "Teal Mask Ogerpon ex": "sv6/24",
+  "Teal Mask Ogerpon ex": cardUrl("TWM", 24),
 
   // --- Pokemon: Meganium line ---
-  "Chikorita": "sv6/1",
-  "Bayleef": "sv6/2",
-  "Meganium": "sv6/3",
+  "Chikorita": cardUrl("ASC", 8),
+  "Bayleef": cardUrl("ASC", 9),
+  "Meganium": cardUrl("ASC", 10),
 
   // --- Pokemon: Raging Bolt ---
-  "Raging Bolt": "sv5/52",
-  "Raging Bolt ex": "sv5/123",
+  "Raging Bolt": cardUrl("SCR", 111),
+  "Raging Bolt ex": cardUrl("TEF", 123),
 
   // --- Pokemon: Gholdengo line ---
-  "Gimmighoul": "sv3/170",
-  "Gholdengo ex": "sv3/184",
+  "Gimmighoul": cardUrl("MEG", 67),
+  "Gholdengo ex": cardUrl("PAR", 139),
 
   // --- Pokemon: N's Zoroark line ---
-  "N's Zorua": "sv8pt5/38",
-  "N's Zoroark": "sv8pt5/39",
+  "N's Zorua": cardUrl("ASC", 136),
+  "N's Zoroark": cardUrl("ASC", 137),
 
   // --- Pokemon: Marnie's Grimmsnarl line ---
-  "Marnie's Impidimp": "sv8pt5/40",
-  "Marnie's Morgrem": "sv8pt5/41",
-  "Marnie's Grimmsnarl ex": "sv8pt5/42",
+  "Marnie's Impidimp": cardUrl("DRI", 134),
+  "Marnie's Morgrem": cardUrl("DRI", 135),
+  "Marnie's Grimmsnarl ex": cardUrl("DRI", 136),
 
   // --- Pokemon: Cynthia's Garchomp line ---
-  "Cynthia's Gible": "sv8pt5/26",
-  "Cynthia's Gabite": "sv8pt5/27",
-  "Cynthia's Garchomp ex": "sv8pt5/28",
+  "Cynthia's Gible": cardUrl("DRI", 102),
+  "Cynthia's Gabite": cardUrl("DRI", 103),
+  "Cynthia's Garchomp ex": cardUrl("DRI", 104),
 
   // --- Pokemon: Ethan's Typhlosion line ---
-  "Ethan's Cyndaquil": "sv8pt5/4",
-  "Ethan's Quilava": "sv8pt5/5",
-  "Ethan's Typhlosion ex": "sv8pt5/6",
+  "Ethan's Cyndaquil": cardUrl("DRI", 32),
+  "Ethan's Quilava": cardUrl("DRI", 33),
+  "Ethan's Typhlosion ex": cardUrl("DRI", 34),
 
-  // --- Pokemon: Hop's Zacian/Zamazenta ---
-  "Hop's Zacian V": "sv8pt5/55",
-  "Hop's Zamazenta V": "sv8pt5/56",
-  "Hop's Cramorant": "sv8pt5/10",
+  // --- Pokemon: Hop's Zacian ---
+  "Hop's Zacian V": cardUrl("JTG", 111),
+  "Hop's Cramorant": cardUrl("ASC", 177),
 
   // --- Pokemon: Froslass line ---
-  "Snorunt": "sv5/38",
-  "Froslass": "sv5/39",
+  "Snorunt": cardUrl("ASC", 46),
+  "Froslass": cardUrl("ASC", 47),
 
   // --- Pokemon: Jellicent ---
-  "Frillish": "sv6/69",
-  "Jellicent": "sv6/70",
+  "Frillish": cardUrl("WHT", 44),
+  "Jellicent": cardUrl("WHT", 45),
 
   // --- Pokemon: Ho-Oh + Armarouge ---
-  "Ho-Oh ex": "sv8/21",
-  "Charcadet": "sv3/38",
-  "Armarouge": "sv3/41",
+  "Ho-Oh ex": cardUrl("DRI", 39),
+  "Charcadet": cardUrl("SVI", 40),
+  "Armarouge": cardUrl("SVI", 41),
 
   // --- Pokemon: Other notable Pokemon ---
-  "Fezandipiti ex": "sv5/92",
-  "Munkidori": "sv5/95",
-  "Bloodmoon Ursaluna ex": "sv6/141",
-  "Mew ex": "sv3pt5/51",
-  "Latias ex": "sv5/108",
-  "Iron Leaves ex": "sv5/123",
-  "Squawkabilly ex": "sv2/169",
-  "Ditto": "sv4/132",
-  "Klefki": "sv4/96",
-  "Fan Rotom": "sv5/31",
-  "Budew": "sv6/14",
-  "Hawlucha": "sv3/118",
-  "Scream Tail": "sv4/86",
-  "Hoothoot": "sv6/128",
-  "Noctowl": "sv6/129",
-  "Slither Wing": "sv4/107",
-  "Terapagos ex": "sv7/167",
-  "Entei V": "sv3/22",
-  "Moltres": "sv6/30",
-  "Lunatone": "sv3/72",
-  "Solrock": "sv3/105",
-  "Yveltal": "sv4/113",
-  "Pecharunt ex": "sv6pt5/39",
-  "Mega Absol ex": "sv8pt5/43",
-  "Mega Kangaskhan ex": "sv8pt5/49",
-  "Mega Mawile ex": "sv8pt5/50",
-  "Genesect": "sv6/103",
-  "Genesect ex": "sv6/104",
-  "Psyduck": "sv3/55",
-  "Shaymin": "sv5/15",
-  "Lillie's Clefairy ex": "sv8pt5/34",
+  "Fezandipiti ex": cardUrl("ASC", 142),
+  "Munkidori": cardUrl("TWM", 95),
+  "Bloodmoon Ursaluna ex": cardUrl("TWM", 141),
+  "Mew ex": cardUrl("MEW", 151),
+  "Latias ex": cardUrl("SSP", 76),
+  "Iron Leaves ex": cardUrl("TEF", 25),
+  "Squawkabilly ex": cardUrl("PAL", 169),
+  "Ditto": cardUrl("PAF", 201),
+  "Klefki": cardUrl("SVI", 96),
+  "Fan Rotom": cardUrl("ASC", 171),
+  "Budew": cardUrl("ASC", 16),
+  "Hawlucha": cardUrl("SVI", 118),
+  "Scream Tail": cardUrl("PAR", 86),
+  "Hoothoot": cardUrl("SCR", 114),
+  "Noctowl": cardUrl("SCR", 115),
+  "Slither Wing": cardUrl("SFA", 26),
+  "Terapagos ex": cardUrl("SCR", 128),
+  "Entei V": cardUrl("BRS", 22),
+  "Moltres": cardUrl("MEW", 146),
+  "Lunatone": cardUrl("MEG", 74),
+  "Solrock": cardUrl("MEG", 75),
+  "Yveltal": cardUrl("MEG", 88),
+  "Pecharunt ex": cardUrl("SFA", 39),
+  "Mega Absol ex": cardUrl("MEG", 86),
+  "Mega Kangaskhan ex": cardUrl("MEG", 104),
+  "Mega Mawile ex": cardUrl("MEG", 94),
+  "Genesect": cardUrl("SFA", 40),
+  "Genesect ex": cardUrl("BLK", 67),
+  "Psyduck": cardUrl("ASC", 39),
+  "Shaymin": cardUrl("TEF", 13),
+  "Lillie's Clefairy ex": cardUrl("ASC", 76),
+  "Toedscool": cardUrl("OBF", 118),
+  "Toedscruel": cardUrl("PAR", 17),
+  "Chi-Yu": cardUrl("PAR", 42),
+  "N's Zoroark ex": cardUrl("ASC", 137),
+  "N's Darumaka": cardUrl("ASC", 132),
+  "N's Darmanitan": cardUrl("ASC", 133),
+  "N's Reshiram": cardUrl("ASC", 140),
+  "Wellspring Mask Ogerpon ex": cardUrl("TWM", 64),
 
   // --- Supporters ---
-  "Iono": "sv2/185",
-  "Boss's Orders": "sv2/172",
-  "Lillie's Determination": "sv8/171",
-  "Professor's Research": "sv1/190",
-  "Arven": "sv1/166",
-  "Professor Sada's Vitality": "sv4/170",
-  "Professor Turo's Scenario": "sv4/171",
-  "Crispin": "sv6/145",
-  "Judge": "sv1/176",
-  "Penny": "sv1/183",
-  "Dawn": "sv7/155",
-  "Briar": "sv7/151",
-  "Hilda": "sv8/163",
-  "Cynthia's Ambition": "sv8pt5/60",
-  "Ethan's Earnestness": "sv8pt5/58",
-  "Hop": "sv8pt5/62",
-  "Korrina": "sv8pt5/63",
-  "Erika's Invitation": "sv8pt5/57",
-  "Ciphermaniac's Codebreaking": "sv6/146",
+  "Iono": cardUrl("PAL", 185),
+  "Boss's Orders": cardUrl("MEG", 114),
+  "Lillie's Determination": cardUrl("MEG", 119),
+  "Professor's Research": cardUrl("SVI", 189),
+  "Arven": cardUrl("OBF", 186),
+  "Professor Sada's Vitality": cardUrl("PAR", 170),
+  "Professor Turo's Scenario": cardUrl("PAR", 171),
+  "Crispin": cardUrl("SCR", 133),
+  "Judge": cardUrl("DRI", 167),
+  "Penny": cardUrl("SVI", 183),
+  "Dawn": cardUrl("PFL", 87),
+  "Briar": cardUrl("SCR", 132),
+  "Hilda": cardUrl("WHT", 84),
+  "Cynthia's Ambition": cardUrl("PRE", 60),
+  "Ethan's Earnestness": cardUrl("PRE", 58),
+  "Hop": cardUrl("JTG", 86),
+  "Korrina": cardUrl("FFI", 95),
+  "Erika's Invitation": cardUrl("MEW", 160),
+  "Ciphermaniac's Codebreaking": cardUrl("TEF", 145),
+  "Cyrano": cardUrl("ASC", 170),
+  "Black Belt's Training": cardUrl("ASC", 163),
+  "Xerosic's Machinations": cardUrl("ASC", 180),
+  "Acerola's Mischief": cardUrl("ASC", 161),
 
   // --- Items ---
-  "Ultra Ball": "sv1/196",
-  "Nest Ball": "sv1/181",
-  "Buddy-Buddy Poffin": "sv4/144",
-  "Rare Candy": "sv1/191",
-  "Night Stretcher": "sv6/152",
-  "Counter Catcher": "sv4/148",
-  "Super Rod": "sv2/188",
-  "Secret Box": "sv6/153",
-  "Earthen Vessel": "sv5/163",
-  "Prime Catcher": "sv6/157",
-  "Energy Switch": "sv1/173",
-  "Energy Retrieval": "sv1/171",
-  "Pokegear 3.0": "sv1/186",
-  "Precious Trolley": "sv6pt5/47",
-  "Superior Energy Retrieval": "sv3/189",
-  "Fighting Gong": "sv3/165",
-  "Air Balloon": "sv4/138",
+  "Ultra Ball": cardUrl("MEG", 131),
+  "Nest Ball": cardUrl("SVI", 181),
+  "Buddy-Buddy Poffin": cardUrl("TEF", 144),
+  "Rare Candy": cardUrl("MEG", 125),
+  "Night Stretcher": cardUrl("ASC", 196),
+  "Counter Catcher": cardUrl("PAR", 160),
+  "Super Rod": cardUrl("PAL", 188),
+  "Secret Box": cardUrl("TWM", 163),
+  "Earthen Vessel": cardUrl("PAR", 163),
+  "Prime Catcher": cardUrl("TWM", 157),
+  "Energy Switch": cardUrl("MEG", 115),
+  "Energy Retrieval": cardUrl("SVI", 171),
+  "Pokegear 3.0": cardUrl("SVI", 186),
+  "Precious Trolley": cardUrl("SSP", 185),
+  "Superior Energy Retrieval": cardUrl("OBF", 189),
+  "Fighting Gong": cardUrl("MEG", 116),
+  "Air Balloon": cardUrl("ASC", 181),
+  "Unfair Stamp": cardUrl("ASC", 199),
+  "N's PP Up": cardUrl("ASC", 192),
+  "Pal Pad": cardUrl("SVI", 182),
+  "Powerglass": cardUrl("ASC", 195),
+  "Jumbo Ice Cream": cardUrl("ASC", 189),
+  "Enhanced Hammer": cardUrl("ASC", 185),
 
   // --- Pokemon Tools ---
-  "Bravery Charm": "sv5/154",
-  "Luxurious Cape": "sv6/150",
-  "Vitality Band": "sv1/197",
+  "Bravery Charm": cardUrl("PAL", 173),
+  "Luxurious Cape": cardUrl("PAR", 166),
+  "Vitality Band": cardUrl("SVI", 197),
 
   // --- Technical Machines ---
-  "Technical Machine: Evolution": "sv4/178",
-  "Technical Machine: Devolution": "sv4/177",
-  "Technical Machine: Turbo Energize": "sv6pt5/48",
+  "Technical Machine: Evolution": cardUrl("PAR", 178),
+  "Technical Machine: Devolution": cardUrl("PAR", 177),
+  "Technical Machine: Turbo Energize": cardUrl("PAR", 179),
 
   // --- Stadiums ---
-  "Jamming Tower": "sv5/165",
-  "Artazon": "sv2/171",
-  "Area Zero Underdepths": "sv5/152",
-  "Battle Cage": "sv6pt5/43",
-  "Spikemuth Gym": "sv8pt5/67",
-  "Magma Basin": "sv3/185",
-  "Town Store": "sv6pt5/49",
-  "Team Rocket's Watchtower": "sv8pt5/68",
+  "Jamming Tower": cardUrl("TWM", 153),
+  "Artazon": cardUrl("PAL", 171),
+  "Area Zero Underdepths": cardUrl("SCR", 131),
+  "Battle Cage": cardUrl("PFL", 85),
+  "Spikemuth Gym": cardUrl("DRI", 169),
+  "Magma Basin": cardUrl("BRS", 144),
+  "Town Store": cardUrl("OBF", 196),
+  "Team Rocket's Watchtower": cardUrl("DRI", 180),
+  "N's Castle": cardUrl("ASC", 193),
+  "Lively Stadium": cardUrl("ASC", 190),
 
   // --- Energy ---
-  "Fire Energy": "sve/2",
-  "Psychic Energy": "sve/5",
-  "Luminous Energy": "sv4/191",
-  "Neo Upper Energy": "sv8/167",
-  "Grass Energy": "sve/1",
-  "Lightning Energy": "sve/4",
-  "Fighting Energy": "sve/6",
-  "Darkness Energy": "sve/7",
-  "Water Energy": "sve/3",
-  "Metal Energy": "sve/8",
-  "Mist Energy": "sv5/161",
-  "Jet Energy": "sv2/190",
+  "Fire Energy": cardUrl("MEE", 2),
+  "Psychic Energy": cardUrl("MEE", 5),
+  "Luminous Energy": cardUrl("PAL", 191),
+  "Neo Upper Energy": cardUrl("TEF", 162),
+  "Grass Energy": cardUrl("MEE", 1),
+  "Lightning Energy": cardUrl("MEE", 4),
+  "Fighting Energy": cardUrl("MEE", 6),
+  "Darkness Energy": cardUrl("MEE", 7),
+  "Water Energy": cardUrl("MEE", 3),
+  "Metal Energy": cardUrl("MEE", 8),
+  "Mist Energy": cardUrl("TEF", 161),
+  "Jet Energy": cardUrl("PAL", 190),
+  "Reversal Energy": cardUrl("ASC", 202),
 };
 
 /**
@@ -240,18 +263,15 @@ const CARD_DATA: Record<string, string> = {
  * Returns null if the card is not in our mapping.
  */
 export function getCardImageUrl(cardName: string): string | null {
-  const data = CARD_DATA[cardName];
-  if (!data) return null;
-  return `${BASE}/${data}.png`;
+  return CARD_DATA[cardName] ?? null;
 }
 
 /**
  * Returns the high-resolution card image URL.
+ * (Limitless CDN LG size is already high-res)
  */
 export function getCardImageUrlHires(cardName: string): string | null {
-  const data = CARD_DATA[cardName];
-  if (!data) return null;
-  return `${BASE}/${data}_hires.png`;
+  return CARD_DATA[cardName] ?? null;
 }
 
 /**
