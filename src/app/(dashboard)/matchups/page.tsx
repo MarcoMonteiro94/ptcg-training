@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { MatchupMatrix } from "@/components/matchups/matchup-matrix";
 import { getMatchupMatrix } from "@/server/queries/matchups";
+
+export const metadata: Metadata = {
+  title: "Matchup Matrix",
+  description: "Win rates between Pokemon TCG archetype pairs based on official tournament data.",
+};
 
 export const revalidate = 3600;
 

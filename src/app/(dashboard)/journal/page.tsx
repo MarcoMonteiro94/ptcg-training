@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MatchList } from "@/components/journal/match-list";
@@ -7,6 +8,11 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Plus, BarChart3 } from "lucide-react";
 import { DeckFilter } from "@/components/journal/deck-filter";
+
+export const metadata: Metadata = {
+  title: "Battle Journal",
+  description: "Track your Pokemon TCG matches, analyze win rates, and identify patterns in your competitive play.",
+};
 
 export default async function JournalPage({
   searchParams,

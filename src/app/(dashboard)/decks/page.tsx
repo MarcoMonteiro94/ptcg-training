@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +7,11 @@ import { Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ArchetypeTier } from "@/types";
 import { getArchetypeImages } from "@/lib/pokemon-images";
+
+export const metadata: Metadata = {
+  title: "Deck Explorer",
+  description: "Browse competitive Pokemon TCG meta archetypes with sample lists, card usage data, and matchup analysis.",
+};
 
 export const revalidate = 3600;
 

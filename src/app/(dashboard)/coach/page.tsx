@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { ChatInterface } from "@/components/coach/chat-interface";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getActiveArchetypes } from "@/server/queries/archetypes";
+
+export const metadata: Metadata = {
+  title: "AI Coach",
+  description: "Get personalized Pokemon TCG coaching powered by AI, based on your match history and the current meta.",
+};
 
 export default async function CoachPage() {
   const supabase = await createClient();

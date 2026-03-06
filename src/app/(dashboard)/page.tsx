@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TierList } from "@/components/meta/tier-list";
 import { MetaBreakdown } from "@/components/meta/meta-breakdown";
 import { getMetaStats, getLatestMetaSnapshot } from "@/server/queries/meta";
+
+export const metadata: Metadata = {
+  title: "Meta Dashboard",
+  description: "Standard format tier list, usage rates, and win rates from official Pokemon TCG tournaments.",
+};
 
 export const revalidate = 3600;
 

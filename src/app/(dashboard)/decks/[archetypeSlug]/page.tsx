@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +10,23 @@ import Image from "next/image";
 import { BackButton } from "@/components/shared/back-button";
 import { getArchetypeImages } from "@/lib/pokemon-images";
 import { CardImage } from "@/components/decks/card-image";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ archetypeSlug: string }>;
+}): Promise<Metadata> {
+  const { archetypeSlug } = await params;
+  let archetype: Awaited<ReturnType<typeof getArchetypeBySlug>> | null = null;
+  try {
+    archetype = await getArchetypeBySlug(archetypeSlug);
+  } catch { /* DB not connected */ }
+  const name = archetype?.name ?? archetypeSlug.replace(/-/g, " ");
+  return {
+    title: `${name} — Deck Analysis`,
+    description: `Card usage, sample decklists, matchups, and tournament results for ${name} in Pokemon TCG Standard format.`,
+  };
+}
 
 // Simple heuristic: energy cards end with "Energy", trainers are common ones
 const ENERGY_RE = /energy$/i;

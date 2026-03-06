@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getActiveTrainingPlan, getWeeklyProgress, getDailyGoals } from "@/server/queries/training";
+
+export const metadata: Metadata = {
+  title: "Training",
+  description: "AI-generated weekly training plans, daily goals, and recommended matchups for competitive Pokemon TCG.",
+};
 import { DailyGoalsCard } from "@/components/training/daily-goals-card";
 import { WeeklyProgress } from "@/components/training/weekly-progress";
 import { RecommendedMatchup } from "@/components/training/recommended-matchup";
