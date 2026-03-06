@@ -30,12 +30,13 @@ interface GeneratePlanOptions {
   userId: string;
   archetypeId: string;
   weeklyGameTarget: number;
+  focusAreas?: string[];
 }
 
 export async function generateWeeklyPlan(
   options: GeneratePlanOptions
 ): Promise<TrainingPlanData> {
-  const { userId, archetypeId, weeklyGameTarget } = options;
+  const { userId, archetypeId, weeklyGameTarget, focusAreas } = options;
 
   // Gather context
   const [profile] = await db
@@ -135,7 +136,8 @@ ${tierList}
 ## Available Archetype IDs
 ${allActiveArchetypes.map((a) => `${a.id}: ${a.name}`).join("\n")}
 
-Create a focused weekly training plan. Prioritize improving the worst matchups that are meta-relevant (high usage opponents). Include 2-3 priority matchups to practice, 2-3 study topics, and a clear rationale.
+${focusAreas && focusAreas.length > 0 ? `## Player Focus Areas\n${focusAreas.join(", ")}\n` : ""}
+Create a focused weekly training plan. Prioritize improving the worst matchups that are meta-relevant (high usage opponents). Include 2-3 priority matchups to practice, 2-3 study topics, and a clear rationale.${focusAreas && focusAreas.length > 0 ? " Tailor study topics and practice recommendations to the player's chosen focus areas." : ""}
 
 Respond ONLY with valid JSON (no markdown, no code blocks):
 {"focus":"<one sentence focus>","weeklyGameTarget":${weeklyGameTarget},"priorityMatchups":[{"archetypeId":"<id>","archetypeName":"<name>","reason":"<why>"}],"studyTopics":["<topic>"],"aiRationale":"<2-3 sentences explaining the plan>"}`;

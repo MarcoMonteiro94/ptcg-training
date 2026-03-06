@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WeeklyProgressEmptyState } from "./empty-states";
 
 interface WeeklyProgressProps {
   progress: {
@@ -19,6 +20,8 @@ export function WeeklyProgress({ progress }: WeeklyProgressProps) {
   const goalsTotal = progress?.totalGoals ?? 0;
   const goalsPercent = goalsTotal > 0 ? Math.round((goalsCompleted / goalsTotal) * 100) : 0;
 
+  const hasNoData = !progress || (gamesPlayed === 0 && goalsTotal === 0);
+
   return (
     <Card className="bg-card/50 border-border/50">
       <CardHeader className="pb-3">
@@ -28,6 +31,10 @@ export function WeeklyProgress({ progress }: WeeklyProgressProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {hasNoData ? (
+          <WeeklyProgressEmptyState />
+        ) : (
+        <>
         {/* Games progress */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
@@ -71,6 +78,8 @@ export function WeeklyProgress({ progress }: WeeklyProgressProps) {
             <p className="text-[10px] text-muted-foreground font-mono uppercase">Goals Done</p>
           </div>
         </div>
+        </>
+        )}
       </CardContent>
     </Card>
   );

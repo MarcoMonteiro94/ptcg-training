@@ -9,13 +9,19 @@ export const metadata: Metadata = {
   description: "Get personalized Pokemon TCG coaching powered by AI, based on your match history and the current meta.",
 };
 
-export default async function CoachPage() {
+export default async function CoachPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ topic?: string }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
+
+  const { topic } = await searchParams;
 
   let archetypes: Array<{ id: string; name: string }> = [];
   try {
@@ -33,7 +39,7 @@ export default async function CoachPage() {
           Get personalized coaching based on your matches and the current meta
         </p>
       </div>
-      <ChatInterface archetypes={archetypes} />
+      <ChatInterface archetypes={archetypes} initialTopic={topic} />
     </div>
   );
 }

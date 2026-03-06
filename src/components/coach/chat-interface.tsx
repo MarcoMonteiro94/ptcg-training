@@ -31,9 +31,10 @@ interface Conversation {
 
 interface ChatInterfaceProps {
   archetypes?: Array<{ id: string; name: string }>;
+  initialTopic?: string;
 }
 
-export function ChatInterface({ archetypes = [] }: ChatInterfaceProps) {
+export function ChatInterface({ archetypes = [], initialTopic }: ChatInterfaceProps) {
   const [studyMode, setStudyMode] = useState(false);
   const [studyArchetypeId, setStudyArchetypeId] = useState("");
   const [showHistory, setShowHistory] = useState(false);
@@ -45,7 +46,9 @@ export function ChatInterface({ archetypes = [] }: ChatInterfaceProps) {
       mode: studyMode ? "study" : "general",
       matchupArchetypeId: studyMode ? studyArchetypeId : undefined,
     });
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(
+    initialTopic ? `I'd like to study: ${initialTopic}` : ""
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/select";
 import { createTrainingPlan } from "@/server/actions/training";
 import { toast } from "sonner";
-import { Loader2, Target, Zap } from "lucide-react";
+import { Loader2, Target, Zap, Focus, Dumbbell } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Archetype {
   id: string;
@@ -24,15 +25,49 @@ interface Archetype {
 
 interface TrainingSetupFormProps {
   archetypes: Archetype[];
+  previousPlan?: {
+    focusAreas: string[] | null;
+    completionRate: number | null;
+    difficulty: string | null;
+  } | null;
 }
 
-export function TrainingSetupForm({ archetypes }: TrainingSetupFormProps) {
+const FOCUS_AREA_OPTIONS = [
+  "Matchup Improvement",
+  "Consistency",
+  "Speed of Play",
+  "Prize Mapping",
+  "Mulligan Decisions",
+  "Opening Turns",
+  "Late Game Decisions",
+] as const;
+
+const DIFFICULTY_OPTIONS = [
+  { value: "casual" as const, label: "Casual", description: "Lighter goals, relaxed pace" },
+  { value: "competitive" as const, label: "Competitive", description: "Standard training load" },
+  { value: "grinder" as const, label: "Grinder", description: "Maximum goals, intense pace" },
+];
+
+export function TrainingSetupForm({ archetypes, previousPlan }: TrainingSetupFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const [selectedDeck, setSelectedDeck] = useState("");
   const [weeklyTarget, setWeeklyTarget] = useState(15);
+  const [focusAreas, setFocusAreas] = useState<string[]>([]);
+  const [difficulty, setDifficulty] = useState<"casual" | "competitive" | "grinder">("competitive");
   const [step, setStep] = useState(1);
+
+  function toggleFocusArea(area: string) {
+    setFocusAreas((prev) => {
+      if (prev.includes(area)) return prev.filter((a) => a !== area);
+      if (prev.length >= 3) {
+        toast.error("Maximum 3 focus areas");
+        return prev;
+      }
+      return [...prev, area];
+    });
+  }
 
   function handleGenerate() {
     if (!selectedDeck) {
@@ -44,6 +79,8 @@ export function TrainingSetupForm({ archetypes }: TrainingSetupFormProps) {
       const result = await createTrainingPlan({
         archetypeId: selectedDeck,
         weeklyGameTarget: weeklyTarget,
+        focusAreas: focusAreas.length > 0 ? focusAreas : undefined,
+        difficulty,
       });
 
       if (result.error) {
@@ -58,6 +95,25 @@ export function TrainingSetupForm({ archetypes }: TrainingSetupFormProps) {
 
   return (
     <div className="space-y-6">
+      {/* Previous plan insight */}
+      {previousPlan && (
+        <div className="rounded-lg bg-muted/20 border border-border/30 p-3 text-sm space-y-1">
+          <p className="text-xs font-mono uppercase text-muted-foreground">
+            Previous Plan
+          </p>
+          {previousPlan.completionRate !== null && (
+            <p className="text-muted-foreground">
+              Completion: <strong>{Math.round(previousPlan.completionRate * 100)}%</strong>
+            </p>
+          )}
+          {previousPlan.focusAreas && previousPlan.focusAreas.length > 0 && (
+            <p className="text-muted-foreground">
+              Focus: {previousPlan.focusAreas.join(", ")}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Step 1: Choose deck */}
       <div className="rounded-xl border border-border/50 bg-card/30 p-4 space-y-4">
         <div className="flex items-center gap-2">
@@ -88,14 +144,55 @@ export function TrainingSetupForm({ archetypes }: TrainingSetupFormProps) {
         </Select>
       </div>
 
-      {/* Step 2: Weekly target */}
+      {/* Step 2: Focus areas */}
       {step >= 2 && (
         <div className="rounded-xl border border-border/50 bg-card/30 p-4 space-y-4 animate-fade-in">
           <div className="flex items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold">
               2
             </div>
-            <h3 className="text-sm font-medium">Weekly Game Target</h3>
+            <h3 className="text-sm font-medium">Focus Areas</h3>
+          </div>
+
+          <Label className="text-xs text-muted-foreground">
+            What do you want to improve? (1-3 areas)
+          </Label>
+
+          <div className="flex flex-wrap gap-2">
+            {FOCUS_AREA_OPTIONS.map((area) => (
+              <button
+                key={area}
+                onClick={() => toggleFocusArea(area)}
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-xs font-medium transition-all border",
+                  focusAreas.includes(area)
+                    ? "bg-primary/10 border-primary/40 text-primary"
+                    : "bg-muted/20 border-border/50 text-muted-foreground hover:border-border"
+                )}
+              >
+                {area}
+              </button>
+            ))}
+          </div>
+
+          <Button
+            onClick={() => setStep(3)}
+            variant="outline"
+            className="w-full"
+          >
+            Continue
+          </Button>
+        </div>
+      )}
+
+      {/* Step 3: Weekly target + difficulty */}
+      {step >= 3 && (
+        <div className="rounded-xl border border-border/50 bg-card/30 p-4 space-y-4 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold">
+              3
+            </div>
+            <h3 className="text-sm font-medium">Training Settings</h3>
           </div>
 
           <div className="space-y-3">
@@ -122,8 +219,33 @@ export function TrainingSetupForm({ archetypes }: TrainingSetupFormProps) {
             </div>
           </div>
 
+          <div className="space-y-3">
+            <Label className="text-xs text-muted-foreground">
+              Difficulty
+            </Label>
+            <div className="grid grid-cols-3 gap-2">
+              {DIFFICULTY_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setDifficulty(opt.value)}
+                  className={cn(
+                    "rounded-lg border p-2.5 text-center transition-all",
+                    difficulty === opt.value
+                      ? "bg-primary/10 border-primary/40"
+                      : "bg-muted/20 border-border/50 hover:border-border"
+                  )}
+                >
+                  <p className="text-xs font-medium">{opt.label}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {opt.description}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <Button
-            onClick={() => setStep(3)}
+            onClick={() => setStep(4)}
             variant="outline"
             className="w-full"
           >
@@ -132,12 +254,12 @@ export function TrainingSetupForm({ archetypes }: TrainingSetupFormProps) {
         </div>
       )}
 
-      {/* Step 3: Generate */}
-      {step >= 3 && (
+      {/* Step 4: Generate */}
+      {step >= 4 && (
         <div className="rounded-xl border border-border/50 bg-card/30 p-4 space-y-4 animate-fade-in">
           <div className="flex items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold">
-              3
+              4
             </div>
             <h3 className="text-sm font-medium">Generate Plan</h3>
           </div>
@@ -149,10 +271,22 @@ export function TrainingSetupForm({ archetypes }: TrainingSetupFormProps) {
                 Deck: <strong>{archetypes.find((a) => a.id === selectedDeck)?.name}</strong>
               </span>
             </div>
+            {focusAreas.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Focus className="h-4 w-4 text-muted-foreground" />
+                <span>Focus: <strong>{focusAreas.join(", ")}</strong></span>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-muted-foreground" />
               <span>
                 Target: <strong>{weeklyTarget} games/week</strong> (~{Math.ceil(weeklyTarget / 7)}/day)
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Dumbbell className="h-4 w-4 text-muted-foreground" />
+              <span>
+                Difficulty: <strong className="capitalize">{difficulty}</strong>
               </span>
             </div>
           </div>

@@ -7,6 +7,7 @@ import {
   index,
   uuid,
   date,
+  integer,
 } from "drizzle-orm/pg-core";
 import { archetypes } from "./game-data";
 
@@ -106,14 +107,39 @@ export interface TrainingPlanData {
   priorityMatchups: Array<{ archetypeId: string; archetypeName: string; reason: string }>;
   studyTopics: string[];
   aiRationale: string;
+  focusAreas?: string[];
+  difficulty?: "casual" | "competitive" | "grinder";
 }
 
 export interface DailyGoalData {
-  type: "games" | "matchup_practice" | "study" | "review";
+  type:
+    | "games"
+    | "matchup_practice"
+    | "study"
+    | "review"
+    | "mulligan_practice"
+    | "prize_check"
+    | "deck_knowledge"
+    | "opening_sequence"
+    | "custom";
   description: string;
   target?: number;
   matchupArchetypeId?: string;
   completed: boolean;
+}
+
+export interface TrainingPlanCompletionSummary {
+  gamesPlayed: number;
+  goalsCompleted: number;
+  goalsTotal: number;
+  winRate: number;
+  matchupImprovements: Array<{
+    archetypeId: string;
+    archetypeName: string;
+    before: number;
+    after: number;
+  }>;
+  aiReview: string;
 }
 
 export const trainingPlans = pgTable(
@@ -131,12 +157,33 @@ export const trainingPlans = pgTable(
       .$type<"active" | "completed" | "abandoned">()
       .default("active")
       .notNull(),
+    completionSummary: jsonb("completion_summary").$type<TrainingPlanCompletionSummary>(),
+    focusAreas: jsonb("focus_areas").$type<string[]>(),
+    difficulty: text("difficulty").$type<"casual" | "competitive" | "grinder">(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     index("training_plans_user_idx").on(table.userId),
     index("training_plans_status_idx").on(table.status),
+  ]
+);
+
+export const trainingStreaks = pgTable(
+  "training_streaks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .references(() => profiles.id, { onDelete: "cascade" })
+      .notNull()
+      .unique(),
+    currentStreak: integer("current_streak").default(0).notNull(),
+    longestStreak: integer("longest_streak").default(0).notNull(),
+    lastCompletedDate: date("last_completed_date"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("training_streaks_user_idx").on(table.userId),
   ]
 );
 
