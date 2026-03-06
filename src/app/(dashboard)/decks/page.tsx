@@ -82,15 +82,15 @@ export default async function DecksPage() {
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
                       {images.length > 0 && (
-                        <span className="flex -space-x-2 shrink-0">
+                        <span className="flex -space-x-3 shrink-0">
                           {images.map((url, i) => (
                             <Image
                               key={i}
                               src={url}
                               alt=""
-                              width={28}
-                              height={28}
-                              className="h-7 w-7 object-contain drop-shadow-md group-hover:scale-110 transition-transform"
+                              width={36}
+                              height={36}
+                              className="h-9 w-9 object-contain drop-shadow-md group-hover:scale-110 transition-transform"
                               unoptimized
                             />
                           ))}

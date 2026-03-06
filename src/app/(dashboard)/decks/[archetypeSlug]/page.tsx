@@ -7,7 +7,8 @@ import { getMatchupsForArchetype } from "@/server/queries/matchups";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { BackButton } from "@/components/shared/back-button";
-import { getArchetypeImages, getPokemonImageUrl } from "@/lib/pokemon-images";
+import { getArchetypeImages } from "@/lib/pokemon-images";
+import { CardImage } from "@/components/decks/card-image";
 
 // Simple heuristic: energy cards end with "Energy", trainers are common ones
 const ENERGY_RE = /energy$/i;
@@ -20,7 +21,19 @@ const KNOWN_TRAINERS = new Set([
   "energy retrieval", "energy search", "energy recycler", "energy switch",
   "arven", "irida", "colress's experiment", "cynthia's ambition",
   "judge", "marnie", "n", "guzma", "lysandre", "penny", "roxanne",
-  "lillie's determination", "pokégear 3.0", "vs seeker",
+  "lillie's determination", "pokégear 3.0", "pokegear 3.0", "vs seeker",
+  "professor sada's vitality", "professor turo's scenario", "crispin",
+  "dawn", "briar", "hilda", "hop", "korrina", "erika's invitation",
+  "ciphermaniac's codebreaking", "ethan's earnestness",
+  "earthen vessel", "prime catcher", "secret box", "precious trolley",
+  "superior energy retrieval", "fighting gong", "air balloon",
+  "bravery charm", "luxurious cape", "vitality band",
+  "technical machine: evolution", "technical machine: turbo energize",
+  "artazon", "area zero underdepths", "battle cage", "spikemuth gym",
+  "magma basin", "town store", "team rocket's watchtower",
+  "unfair stamp", "acerola's mischief", "cyrano", "black belt's training",
+  "xerosic's machinations", "n's pp up", "pal pad", "powerglass",
+  "n's castle", "lively stadium", "jumbo ice cream", "enhanced hammer",
 ]);
 
 function isPokemonCard(cardId: string): boolean {
@@ -82,15 +95,15 @@ export default async function ArchetypeDetailPage({
       <BackButton href="/decks" label="Deck Explorer" />
       <div className="flex items-center gap-3">
         {images.length > 0 && (
-          <span className="flex -space-x-3 shrink-0">
+          <span className="flex -space-x-4 shrink-0">
             {images.map((url, i) => (
               <Image
                 key={i}
                 src={url}
                 alt={archetype.name}
-                width={48}
-                height={48}
-                className="h-10 w-10 sm:h-12 sm:w-12 object-contain drop-shadow-lg"
+                width={56}
+                height={56}
+                className="h-12 w-12 sm:h-14 sm:w-14 object-contain drop-shadow-lg"
                 unoptimized
               />
             ))}
@@ -121,25 +134,13 @@ export default async function ArchetypeDetailPage({
               <h3 className="text-xs font-mono uppercase tracking-wider text-[oklch(0.80_0.15_155)] mb-3">
                 Core Cards (&ge;75% usage)
               </h3>
-              <div className="space-y-1">
+              <div className="flex flex-wrap gap-2">
                 {coreCards.map((card) => (
-                  <div key={card.cardId} className="flex items-center justify-between text-sm gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      {isPokemonCard(card.cardId) && (
-                        <Image
-                          src={getPokemonImageUrl(card.cardId)}
-                          alt=""
-                          width={20}
-                          height={20}
-                          className="h-5 w-5 object-contain shrink-0"
-                          unoptimized
-                        />
-                      )}
-                      <span className="truncate">{card.cardId}</span>
+                  <div key={card.cardId} className="relative group">
+                    <CardImage cardName={card.cardId} count={card.avgCount} size="sm" />
+                    <div className="text-[9px] font-mono text-muted-foreground/60 text-center mt-1">
+                      {Math.round(card.usageRate * 100)}%
                     </div>
-                    <span className="text-xs font-mono text-muted-foreground shrink-0">
-                      {card.avgCount}x avg ({Math.round(card.usageRate * 100)}%)
-                    </span>
                   </div>
                 ))}
               </div>
@@ -150,25 +151,13 @@ export default async function ArchetypeDetailPage({
               <h3 className="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-3">
                 Flex Cards
               </h3>
-              <div className="space-y-1">
+              <div className="flex flex-wrap gap-2">
                 {flexCards.slice(0, 20).map((card) => (
-                  <div key={card.cardId} className="flex items-center justify-between text-sm gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      {isPokemonCard(card.cardId) && (
-                        <Image
-                          src={getPokemonImageUrl(card.cardId)}
-                          alt=""
-                          width={20}
-                          height={20}
-                          className="h-5 w-5 object-contain shrink-0"
-                          unoptimized
-                        />
-                      )}
-                      <span className="truncate">{card.cardId}</span>
+                  <div key={card.cardId} className="relative group">
+                    <CardImage cardName={card.cardId} count={card.avgCount} size="sm" />
+                    <div className="text-[9px] font-mono text-muted-foreground/60 text-center mt-1">
+                      {Math.round(card.usageRate * 100)}%
                     </div>
-                    <span className="text-xs font-mono text-muted-foreground shrink-0">
-                      {card.avgCount}x avg ({Math.round(card.usageRate * 100)}%)
-                    </span>
                   </div>
                 ))}
               </div>
@@ -207,24 +196,13 @@ export default async function ArchetypeDetailPage({
                       </div>
                     </summary>
                     <div className="px-4 pb-4 pt-1 border-t border-border/30">
-                      <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="space-y-4">
                         {pokemon.length > 0 && (
                           <div>
                             <h4 className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 mb-2">Pokemon</h4>
-                            <div className="space-y-0.5">
+                            <div className="flex flex-wrap gap-1.5">
                               {pokemon.map((c) => (
-                                <div key={c.card_id} className="flex items-center gap-1.5 text-xs">
-                                  <Image
-                                    src={getPokemonImageUrl(c.card_id)}
-                                    alt=""
-                                    width={16}
-                                    height={16}
-                                    className="h-4 w-4 object-contain"
-                                    unoptimized
-                                  />
-                                  <span className="font-mono text-muted-foreground/70">{c.count}x</span>
-                                  <span>{c.card_id}</span>
-                                </div>
+                                <CardImage key={c.card_id} cardName={c.card_id} count={c.count} size="sm" />
                               ))}
                             </div>
                           </div>
@@ -232,12 +210,9 @@ export default async function ArchetypeDetailPage({
                         {trainers.length > 0 && (
                           <div>
                             <h4 className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 mb-2">Trainers</h4>
-                            <div className="space-y-0.5">
+                            <div className="flex flex-wrap gap-1.5">
                               {trainers.map((c) => (
-                                <div key={c.card_id} className="flex items-center gap-1.5 text-xs">
-                                  <span className="font-mono text-muted-foreground/70">{c.count}x</span>
-                                  <span>{c.card_id}</span>
-                                </div>
+                                <CardImage key={c.card_id} cardName={c.card_id} count={c.count} size="sm" />
                               ))}
                             </div>
                           </div>
@@ -245,12 +220,9 @@ export default async function ArchetypeDetailPage({
                         {energy.length > 0 && (
                           <div>
                             <h4 className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 mb-2">Energy</h4>
-                            <div className="space-y-0.5">
+                            <div className="flex flex-wrap gap-1.5">
                               {energy.map((c) => (
-                                <div key={c.card_id} className="flex items-center gap-1.5 text-xs">
-                                  <span className="font-mono text-muted-foreground/70">{c.count}x</span>
-                                  <span>{c.card_id}</span>
-                                </div>
+                                <CardImage key={c.card_id} cardName={c.card_id} count={c.count} size="sm" />
                               ))}
                             </div>
                           </div>
@@ -272,9 +244,22 @@ export default async function ArchetypeDetailPage({
               {matchups
                 .filter((m) => m.totalGames >= 10)
                 .sort((a, b) => (b.winRate ?? 0) - (a.winRate ?? 0))
-                .map((m) => (
+                .map((m) => {
+                  const opponentImages = getArchetypeImages(m.opponentId);
+                  return (
                   <div key={m.opponentId} className="flex justify-between items-center text-sm border-b border-border/30 pb-1.5 last:border-0">
-                    <span>vs {m.opponentName}</span>
+                    <div className="flex items-center gap-1.5">
+                      {opponentImages.length > 0 ? (
+                        <span className="flex -space-x-2 shrink-0">
+                          {opponentImages.map((url, i) => (
+                            <Image key={i} src={url} alt="" width={20} height={20} className="h-5 w-5 object-contain" unoptimized />
+                          ))}
+                        </span>
+                      ) : (
+                        <span className="h-5 w-5 rounded-full bg-muted/30 shrink-0" />
+                      )}
+                      <span>vs {m.opponentName}</span>
+                    </div>
                     <div className="flex items-center gap-3">
                       <span className={cn("font-mono", getWinRateColor(m.winRate ?? 0))}>
                         {m.winRate !== null ? `${Math.round(m.winRate * 100)}%` : "-"}
@@ -284,7 +269,8 @@ export default async function ArchetypeDetailPage({
                       </span>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
             </div>
           )}
         </TabsContent>
@@ -293,15 +279,92 @@ export default async function ArchetypeDetailPage({
           {placements.length === 0 ? (
             <p className="text-muted-foreground text-sm">No placement data available.</p>
           ) : (
-            <div className="rounded-xl border border-border/50 bg-card/30 p-4 space-y-1.5">
-              {placements.map((p) => (
-                <div key={p.id} className="flex justify-between text-sm border-b border-border/30 pb-1.5 last:border-0">
-                  <span>{p.playerName}</span>
-                  <span className="text-xs font-mono text-muted-foreground">
-                    #{p.placing} {p.record && `(${p.record})`}
-                  </span>
-                </div>
-              ))}
+            <div className="space-y-1.5">
+              {placements.map((p) => {
+                const playerList = sampleLists.find(
+                  (l) => l.playerName === p.playerName || l.standingId === p.id
+                );
+                if (playerList) {
+                  const pokemon = playerList.cards.filter((c) => isPokemonCard(c.card_id));
+                  const trainers = playerList.cards.filter((c) => !isPokemonCard(c.card_id) && !ENERGY_RE.test(c.card_id));
+                  const energy = playerList.cards.filter((c) => ENERGY_RE.test(c.card_id));
+                  return (
+                    <details key={p.id} className="rounded-xl border border-border/50 bg-card/30 group">
+                      <summary className="flex items-center justify-between cursor-pointer px-4 py-2.5 hover:bg-muted/10 transition-colors">
+                        <div className="flex items-center gap-1.5">
+                          {images.length > 0 && (
+                            <span className="flex -space-x-2 shrink-0">
+                              {images.map((url, i) => (
+                                <Image key={i} src={url} alt="" width={20} height={20} className="h-5 w-5 object-contain" unoptimized />
+                              ))}
+                            </span>
+                          )}
+                          <span className="text-sm font-medium">{p.playerName}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono text-muted-foreground">
+                            #{p.placing} {p.record && `(${p.record})`}
+                          </span>
+                          <span className="text-[10px] font-mono text-muted-foreground/40">
+                            {playerList.cards.length} cards
+                          </span>
+                        </div>
+                      </summary>
+                      <div className="px-4 pb-4 pt-1 border-t border-border/30">
+                        <div className="space-y-4">
+                          {pokemon.length > 0 && (
+                            <div>
+                              <h4 className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 mb-2">Pokemon</h4>
+                              <div className="flex flex-wrap gap-1.5">
+                                {pokemon.map((c) => (
+                                  <CardImage key={c.card_id} cardName={c.card_id} count={c.count} size="sm" />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {trainers.length > 0 && (
+                            <div>
+                              <h4 className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 mb-2">Trainers</h4>
+                              <div className="flex flex-wrap gap-1.5">
+                                {trainers.map((c) => (
+                                  <CardImage key={c.card_id} cardName={c.card_id} count={c.count} size="sm" />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {energy.length > 0 && (
+                            <div>
+                              <h4 className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 mb-2">Energy</h4>
+                              <div className="flex flex-wrap gap-1.5">
+                                {energy.map((c) => (
+                                  <CardImage key={c.card_id} cardName={c.card_id} count={c.count} size="sm" />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </details>
+                  );
+                }
+                return (
+                  <div key={p.id} className="rounded-xl border border-border/50 bg-card/30 flex justify-between items-center text-sm px-4 py-2.5">
+                    <div className="flex items-center gap-1.5">
+                      {images.length > 0 && (
+                        <span className="flex -space-x-2 shrink-0">
+                          {images.map((url, i) => (
+                            <Image key={i} src={url} alt="" width={20} height={20} className="h-5 w-5 object-contain" unoptimized />
+                          ))}
+                        </span>
+                      )}
+                      <span>{p.playerName}</span>
+                    </div>
+                    <span className="text-xs font-mono text-muted-foreground">
+                      #{p.placing} {p.record && `(${p.record})`}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </TabsContent>
