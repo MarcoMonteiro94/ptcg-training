@@ -10,6 +10,7 @@ export default async function MetaDashboardPage() {
 
   let archetypeStats: Awaited<ReturnType<typeof getMetaStats>> = [];
   let snapshotData: Array<{
+    archetypeId: string;
     name: string;
     usageRate: number;
     winRate: number;
@@ -28,6 +29,7 @@ export default async function MetaDashboardPage() {
       }>).map((d) => {
         const arch = archetypeStats.find((a) => a.id === d.archetype_id);
         return {
+          archetypeId: d.archetype_id,
           name: arch?.name || d.archetype_id,
           usageRate: d.usage_rate,
           winRate: arch?.winRate ?? d.win_rate,

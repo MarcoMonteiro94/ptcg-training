@@ -1,9 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { getArchetypeImages, getPokemonImageUrl } from "@/lib/pokemon-images";
 
 interface MetaBreakdownProps {
   data: Array<{
+    archetypeId: string;
     name: string;
     usageRate: number;
     winRate: number;
@@ -79,6 +82,21 @@ export function MetaBreakdown({ data }: MetaBreakdownProps) {
             {/* Name + usage bar */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
+                {(() => {
+                  const images = getArchetypeImages(entry.archetypeId);
+                  const srcs = images.length > 0 ? images : [getPokemonImageUrl(entry.name)];
+                  return srcs.slice(0, 2).map((src, idx) => (
+                    <Image
+                      key={idx}
+                      src={src}
+                      alt=""
+                      width={20}
+                      height={20}
+                      className={cn("h-5 w-5 object-contain shrink-0", idx > 0 && "-ml-2")}
+                      unoptimized
+                    />
+                  ));
+                })()}
                 <span className="text-[13px] font-medium truncate">
                   {entry.name}
                 </span>

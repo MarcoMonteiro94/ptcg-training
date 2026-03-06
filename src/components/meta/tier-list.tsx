@@ -61,15 +61,15 @@ export function TierList({ archetypes }: TierListProps) {
                           <div className="group rounded-lg border border-border/40 bg-card/40 px-2.5 py-1.5 sm:px-3 sm:py-2 hover:border-primary/25 hover:bg-primary/5 transition-all duration-200">
                             <div className="flex items-center gap-1.5 text-xs sm:text-sm font-medium group-hover:text-primary transition-colors whitespace-nowrap">
                               {images.length > 0 && (
-                                <span className="flex -space-x-1.5 shrink-0">
+                                <span className="flex -space-x-2 shrink-0">
                                   {images.map((url, i) => (
                                     <Image
                                       key={i}
                                       src={url}
                                       alt=""
-                                      width={20}
-                                      height={20}
-                                      className="h-5 w-5 object-contain"
+                                      width={28}
+                                      height={28}
+                                      className="h-7 w-7 object-contain drop-shadow-sm"
                                       unoptimized
                                     />
                                   ))}
