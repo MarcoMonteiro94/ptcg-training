@@ -38,7 +38,7 @@ export function WeeklyProgress({ progress }: WeeklyProgressProps) {
           </div>
           <div className="h-2 rounded-full bg-muted/30 overflow-hidden">
             <div
-              className="h-full rounded-full bg-primary transition-all duration-500"
+              className="h-full rounded-full bg-primary transition-all duration-500 shadow-[0_0_8px_oklch(0.75_0.18_165/0.4)]"
               style={{ width: `${gamesPercent}%` }}
             />
           </div>
@@ -54,7 +54,7 @@ export function WeeklyProgress({ progress }: WeeklyProgressProps) {
           </div>
           <div className="h-2 rounded-full bg-muted/30 overflow-hidden">
             <div
-              className="h-full rounded-full bg-[oklch(0.72_0.19_155)] transition-all duration-500"
+              className="h-full rounded-full bg-[oklch(0.72_0.19_155)] transition-all duration-500 shadow-[0_0_8px_oklch(0.72_0.19_155/0.4)]"
               style={{ width: `${goalsPercent}%` }}
             />
           </div>

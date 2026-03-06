@@ -1,7 +1,9 @@
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Swords } from "lucide-react";
 import Link from "next/link";
+import { getArchetypeImages } from "@/lib/pokemon-images";
 
 interface RecommendedMatchupProps {
   matchup: {
@@ -12,6 +14,8 @@ interface RecommendedMatchupProps {
 }
 
 export function RecommendedMatchup({ matchup }: RecommendedMatchupProps) {
+  const images = getArchetypeImages(matchup.archetypeId);
+
   return (
     <Card className="bg-card/50 border-border/50">
       <CardHeader className="pb-3">
@@ -23,15 +27,25 @@ export function RecommendedMatchup({ matchup }: RecommendedMatchupProps) {
       <CardContent>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[oklch(0.70_0.20_15/0.15)]">
-              <Swords className="h-5 w-5 text-[oklch(0.70_0.20_15)]" />
-            </div>
+            {images.length > 0 ? (
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[oklch(0.70_0.20_15/0.15)]">
+                <span className="flex -space-x-2">
+                  {images.slice(0, 2).map((url, i) => (
+                    <Image key={i} src={url} alt="" width={24} height={24} className="h-6 w-6 object-contain" unoptimized />
+                  ))}
+                </span>
+              </div>
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[oklch(0.70_0.20_15/0.15)]">
+                <Swords className="h-5 w-5 text-[oklch(0.70_0.20_15)]" />
+              </div>
+            )}
             <div>
               <p className="font-medium text-sm">{matchup.archetypeName}</p>
               <p className="text-xs text-muted-foreground">{matchup.reason}</p>
             </div>
           </div>
-          <Link href={`/coach`}>
+          <Link href="/coach">
             <Button variant="outline" size="sm">
               Study with Coach
             </Button>

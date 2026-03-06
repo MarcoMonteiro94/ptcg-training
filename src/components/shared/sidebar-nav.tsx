@@ -51,7 +51,7 @@ export function SidebarNav() {
             )}
             <item.icon
               className={cn(
-                "h-4 w-4 shrink-0 transition-colors",
+                "h-[18px] w-[18px] shrink-0 transition-colors",
                 isActive ? "text-primary drop-shadow-[0_0_4px_oklch(0.75_0.18_165/0.4)]" : "text-muted-foreground/70 group-hover:text-foreground"
               )}
             />

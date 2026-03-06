@@ -239,8 +239,8 @@ export function ChatInterface({ archetypes = [] }: ChatInterfaceProps) {
           <ScrollArea className="h-full p-3 sm:p-4" ref={scrollRef}>
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/20 mb-4">
-                  <Bot className="h-7 w-7 text-muted-foreground/40" />
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl holo-gradient mb-4 shadow-[0_0_20px_oklch(0.75_0.18_165/0.2)]">
+                  <Bot className="h-7 w-7 text-background" />
                 </div>
                 <p className="text-sm font-medium mb-1">Ready to coach</p>
                 <p className="text-xs text-muted-foreground/60 max-w-sm mb-6">

@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Pencil } from "lucide-react";
 import { MatchEditDialog } from "./match-edit-dialog";
+import { getArchetypeImageUrl } from "@/lib/pokemon-images";
 
 interface MatchLog {
   id: string;
@@ -90,6 +92,12 @@ export function MatchList({ matches, archetypeNames, archetypes = [] }: MatchLis
               >
                 {config.label}
               </Badge>
+              {match.opponentArchetypeId && (() => {
+                const oppImg = getArchetypeImageUrl(match.opponentArchetypeId);
+                return oppImg ? (
+                  <Image src={oppImg} alt="" width={24} height={24} className="h-6 w-6 object-contain shrink-0" unoptimized />
+                ) : null;
+              })()}
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium truncate">
                   {userDeck ? (

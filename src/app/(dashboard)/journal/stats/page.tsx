@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getUserMatchStats, getUserDecks } from "@/server/queries/journal";
 import { getAllArchetypes } from "@/server/queries/archetypes";
 import { createClient } from "@/lib/supabase/server";
@@ -6,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Target, TrendingUp, TrendingDown, Hash } from "lucide-react";
 import { DeckFilter } from "@/components/journal/deck-filter";
 import { BackButton } from "@/components/shared/back-button";
+import { getArchetypeImageUrl } from "@/lib/pokemon-images";
 
 export default async function JournalStatsPage({
   searchParams,
@@ -61,6 +63,7 @@ export default async function JournalStatsPage({
 
   const matchupEntries = Object.entries(stats.byOpponent)
     .map(([id, data]) => ({
+      id,
       name: archetypeNames[id] || id,
       ...data,
       total: data.wins + data.losses + data.draws,
@@ -161,7 +164,15 @@ export default async function JournalStatsPage({
                 key={entry.name}
                 className="flex items-center justify-between border-b border-border/30 pb-1.5 last:border-0"
               >
-                <span className="text-sm truncate mr-2">{entry.name}</span>
+                <div className="flex items-center gap-1.5 truncate mr-2">
+                  {(() => {
+                    const img = getArchetypeImageUrl(entry.id);
+                    return img ? (
+                      <Image src={img} alt="" width={20} height={20} className="h-5 w-5 shrink-0" unoptimized />
+                    ) : null;
+                  })()}
+                  <span className="text-sm truncate">{entry.name}</span>
+                </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <span
                     className={cn(

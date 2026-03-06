@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Grid3X3, Layers, BookOpen, Bot } from "lucide-react";
+import { BarChart3, Grid3X3, Layers, BookOpen, Bot, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { href: "/matchups", label: "Matchups", icon: Grid3X3 },
   { href: "/decks", label: "Decks", icon: Layers },
   { href: "/journal", label: "Journal", icon: BookOpen },
+  { href: "/training", label: "Training", icon: Target },
   { href: "/coach", label: "Coach", icon: Bot },
 ];
 
@@ -28,17 +29,17 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors min-w-[52px]",
+                "relative flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[44px]",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground active:text-foreground"
               )}
             >
-              <item.icon className={cn("h-5 w-5", isActive && "drop-shadow-[0_0_6px_oklch(0.75_0.18_165/0.5)]")} />
-              <span className="text-[10px] font-medium leading-none">{item.label}</span>
               {isActive && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-primary" />
               )}
+              <item.icon className={cn("h-5 w-5", isActive && "drop-shadow-[0_0_6px_oklch(0.75_0.18_165/0.5)]")} />
+              <span className="text-[9px] font-medium leading-none">{item.label}</span>
             </Link>
           );
         })}

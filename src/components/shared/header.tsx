@@ -19,8 +19,8 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/85 backdrop-blur-xl">
       <div className="flex h-14 items-center px-4 gap-4">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg holo-gradient shadow-[0_0_12px_oklch(0.75_0.18_165/0.2)]">
-            <Zap className="h-4 w-4 text-background" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl holo-gradient shadow-[0_0_12px_oklch(0.75_0.18_165/0.25)] group-hover:shadow-[0_0_18px_oklch(0.75_0.18_165/0.35)] transition-shadow">
+            <Zap className="h-4.5 w-4.5 text-background" />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold tracking-tight leading-none">

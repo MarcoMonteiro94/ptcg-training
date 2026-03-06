@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { getArchetypeBySlug } from "@/server/queries/archetypes";
 import { getMatchupsForArchetype } from "@/server/queries/matchups";
 import { cn } from "@/lib/utils";
 import { BackButton } from "@/components/shared/back-button";
+import { getArchetypeImages, getPokemonImageUrl } from "@/lib/pokemon-images";
 
 export const revalidate = 3600;
 
@@ -79,11 +81,23 @@ export default async function MatchupDetailPage({
   return (
     <div className="space-y-6 animate-fade-in">
       <BackButton href="/matchups" label="Matchups" />
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{archetype.name} Matchups</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Detailed matchup breakdown and trends
-        </p>
+      <div className="flex items-center gap-3">
+        {(() => {
+          const imgs = getArchetypeImages(archetype.slug);
+          return imgs.length > 0 ? (
+            <div className="flex -space-x-2">
+              {imgs.slice(0, 2).map((url, i) => (
+                <Image key={i} src={url} alt="" width={40} height={40} className="h-10 w-10 drop-shadow-md" unoptimized />
+              ))}
+            </div>
+          ) : null;
+        })()}
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{archetype.name} Matchups</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Detailed matchup breakdown and trends
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-3 stagger-children">
@@ -106,7 +120,10 @@ export default async function MatchupDetailPage({
                   const badge = getWinRateBadge(m.winRate ?? 0);
                   return (
                     <div key={m.opponentId} className="flex justify-between items-center text-sm">
-                      <span className="truncate mr-2">{m.opponentName}</span>
+                      <div className="flex items-center gap-1.5 truncate mr-2">
+                        <Image src={getPokemonImageUrl(m.opponentName)} alt="" width={20} height={20} className="h-5 w-5 shrink-0" unoptimized />
+                        <span className="truncate">{m.opponentName}</span>
+                      </div>
                       <Badge
                         className={cn(
                           "font-mono text-[10px] px-1.5 py-0 border-0 shrink-0",
@@ -140,7 +157,10 @@ export default async function MatchupDetailPage({
                   key={m.id}
                   className="flex justify-between items-center text-sm border-b border-border/30 pb-1.5 last:border-0"
                 >
-                  <span>vs {m.opponentName}</span>
+                  <div className="flex items-center gap-1.5">
+                    <Image src={getPokemonImageUrl(m.opponentName)} alt="" width={20} height={20} className="h-5 w-5 shrink-0" unoptimized />
+                    <span>vs {m.opponentName}</span>
+                  </div>
                   <div className="flex items-center gap-3">
                     <span className={cn("font-mono", m.winRate !== null ? getWinRateColor(m.winRate) : "text-muted-foreground")}>
                       {m.winRate !== null ? `${Math.round(m.winRate * 100)}%` : "-"}

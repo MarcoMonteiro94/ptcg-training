@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -8,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getArchetypeImages } from "@/lib/pokemon-images";
 
 interface Archetype {
   id: string;
@@ -56,18 +58,30 @@ export function MatchupMatrix({ archetypes, matrix }: MatchupMatrixProps) {
               <th className="sticky left-0 z-10 bg-card p-2 text-left font-mono text-[10px] uppercase tracking-wider text-muted-foreground min-w-[130px]">
                 vs
               </th>
-              {archetypes.map((arch) => (
-                <th
-                  key={arch.id}
-                  className="p-1 text-center font-mono text-[10px] uppercase tracking-wider text-muted-foreground min-w-[52px] max-w-[70px]"
-                >
-                  <span className="block truncate" title={arch.name}>
-                    {arch.name.length > 8
-                      ? arch.name.slice(0, 7) + "."
-                      : arch.name}
-                  </span>
-                </th>
-              ))}
+              {archetypes.map((arch) => {
+                const imgs = getArchetypeImages(arch.id);
+                return (
+                  <th
+                    key={arch.id}
+                    className="p-1 text-center font-mono text-[10px] uppercase tracking-wider text-muted-foreground min-w-[52px] max-w-[70px]"
+                  >
+                    <div className="flex flex-col items-center gap-0.5">
+                      {imgs.length > 0 && (
+                        <span className="flex -space-x-1 shrink-0">
+                          {imgs.slice(0, 2).map((url, i) => (
+                            <Image key={i} src={url} alt="" width={18} height={18} className="h-[18px] w-[18px] object-contain" unoptimized />
+                          ))}
+                        </span>
+                      )}
+                      <span className="block truncate" title={arch.name}>
+                        {arch.name.length > 8
+                          ? arch.name.slice(0, 7) + "."
+                          : arch.name}
+                      </span>
+                    </div>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
@@ -76,9 +90,19 @@ export function MatchupMatrix({ archetypes, matrix }: MatchupMatrixProps) {
                 <td className="sticky left-0 z-10 bg-card p-2 font-medium text-sm border-r border-border/30 group-hover:bg-muted/30 transition-colors">
                   <Link
                     href={`/matchups/${rowArch.slug}`}
-                    className="hover:text-primary transition-colors"
+                    className="hover:text-primary transition-colors flex items-center gap-2"
                   >
-                    {rowArch.name}
+                    {(() => {
+                      const imgs = getArchetypeImages(rowArch.id);
+                      return imgs.length > 0 ? (
+                        <span className="flex -space-x-1.5 shrink-0">
+                          {imgs.slice(0, 2).map((url, i) => (
+                            <Image key={i} src={url} alt="" width={20} height={20} className="h-5 w-5 object-contain" unoptimized />
+                          ))}
+                        </span>
+                      ) : null;
+                    })()}
+                    <span className="truncate">{rowArch.name}</span>
                   </Link>
                 </td>
                 {archetypes.map((colArch) => {
