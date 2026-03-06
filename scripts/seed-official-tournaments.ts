@@ -57,6 +57,17 @@ const ARCHETYPES: ArchetypeSeed[] = [
   { id: "iron-hands-magneton", name: "Iron Hands Magneton", slug: "iron-hands-magneton", identifierCards: ["Iron Hands", "Magneton"] },
   { id: "lucario-hariyama", name: "Lucario Hariyama", slug: "lucario-hariyama", identifierCards: ["Lucario", "Hariyama"] },
   { id: "lopunny-dusknoir", name: "Lopunny Dusknoir", slug: "lopunny-dusknoir", identifierCards: ["Lopunny", "Dusknoir"] },
+  // Archetypes with decklists but no top-32 standings
+  { id: "conkeldurr", name: "Conkeldurr", slug: "conkeldurr", identifierCards: ["Conkeldurr"] },
+  { id: "ogerpon-meganium", name: "Ogerpon Meganium", slug: "ogerpon-meganium", identifierCards: ["Ogerpon", "Meganium"] },
+  { id: "cynthias-garchomp", name: "Cynthia's Garchomp", slug: "cynthias-garchomp", identifierCards: ["Garchomp"] },
+  { id: "greninja-blaziken", name: "Greninja Blaziken", slug: "greninja-blaziken", identifierCards: ["Greninja", "Blaziken"] },
+  { id: "ethans-typhlosion", name: "Ethan's Typhlosion", slug: "ethans-typhlosion", identifierCards: ["Typhlosion"] },
+  { id: "ho-oh-armarouge", name: "Ho-Oh Armarouge", slug: "ho-oh-armarouge", identifierCards: ["Ho-Oh", "Armarouge"] },
+  { id: "hydreigon", name: "Hydreigon", slug: "hydreigon", identifierCards: ["Hydreigon"] },
+  { id: "hops-zacian", name: "Hop's Zacian", slug: "hops-zacian", identifierCards: ["Zacian"] },
+  { id: "marnies-grimmsnarl", name: "Marnie's Grimmsnarl", slug: "marnies-grimmsnarl", identifierCards: ["Grimmsnarl"] },
+  { id: "mega-lucario", name: "Mega Lucario", slug: "mega-lucario", identifierCards: ["Lucario"] },
 ];
 
 // ── Tournaments ─────────────────────────────────────────────────────────────
