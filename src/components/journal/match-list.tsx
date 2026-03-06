@@ -102,7 +102,7 @@ export function MatchList({ matches, archetypeNames, archetypes = [] }: MatchLis
                 <div className="text-sm font-medium truncate">
                   {userDeck ? (
                     <span>
-                      <span className="text-muted-foreground">{userDeck}</span>
+                      <span className="text-muted-foreground hidden sm:inline">{userDeck}</span>
                       {" "}
                       <span className="text-muted-foreground/50">vs</span>
                       {" "}
