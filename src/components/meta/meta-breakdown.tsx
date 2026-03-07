@@ -11,6 +11,7 @@ interface MetaBreakdownProps {
     usageRate: number;
     winRate: number;
     tier: string;
+    metaScore: number;
   }>;
 }
 
@@ -38,7 +39,7 @@ function getWinRateColor(wr: number): string {
 }
 
 export function MetaBreakdown({ data }: MetaBreakdownProps) {
-  const sorted = [...data].sort((a, b) => b.usageRate - a.usageRate);
+  const sorted = [...data].sort((a, b) => b.metaScore - a.metaScore);
   const maxUsage = sorted[0]?.usageRate || 0.2;
 
   if (sorted.length === 0) {
@@ -58,6 +59,7 @@ export function MetaBreakdown({ data }: MetaBreakdownProps) {
       <div className="hidden sm:flex items-center text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 px-1 pb-2">
         <span className="w-7 shrink-0">Tier</span>
         <span className="flex-1 pl-1">Archetype</span>
+        <span className="w-12 text-right">Score</span>
         <span className="w-14 text-right">Usage</span>
         <span className="w-14 text-right">WR</span>
       </div>
@@ -109,6 +111,11 @@ export function MetaBreakdown({ data }: MetaBreakdownProps) {
               </div>
             </div>
 
+            {/* Meta Score */}
+            <span className="w-10 sm:w-12 text-right text-[11px] font-mono font-semibold text-foreground/80 tabular-nums">
+              {Math.round(entry.metaScore)}
+            </span>
+
             {/* Usage % */}
             <span className="w-12 sm:w-14 text-right text-[11px] font-mono text-muted-foreground/70 tabular-nums">
               {(entry.usageRate * 100).toFixed(1)}%
@@ -136,6 +143,9 @@ export function MetaBreakdown({ data }: MetaBreakdownProps) {
           <div className="h-1 w-3 rounded-full bg-[oklch(0.80_0.15_25)] opacity-70" />
           <span>&lt;44% WR</span>
         </div>
+        <span className="text-[10px] text-muted-foreground/40 font-mono ml-auto">
+          Score = WR 30% + Top Cut 30% + Usage 20% + Matchups 20%
+        </span>
       </div>
     </div>
   );

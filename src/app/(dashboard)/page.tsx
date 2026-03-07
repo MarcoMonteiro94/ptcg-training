@@ -21,6 +21,7 @@ export default async function MetaDashboardPage() {
     usageRate: number;
     winRate: number;
     tier: string;
+    metaScore: number;
   }> = [];
 
   try {
@@ -32,6 +33,7 @@ export default async function MetaDashboardPage() {
         usage_rate: number;
         win_rate: number;
         tier: string;
+        meta_score?: number;
       }>).map((d) => {
         const arch = archetypeStats.find((a) => a.id === d.archetype_id);
         return {
@@ -40,6 +42,7 @@ export default async function MetaDashboardPage() {
           usageRate: d.usage_rate,
           winRate: arch?.winRate ?? d.win_rate,
           tier: arch?.tier || d.tier,
+          metaScore: d.meta_score ?? d.usage_rate * 100,
         };
       });
     }

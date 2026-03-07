@@ -58,6 +58,11 @@ export const metaSnapshots = pgTable(
           win_rate: number;
           tier: string;
           justification?: string;
+          meta_score?: number;
+          top8_rate?: number;
+          top32_rate?: number;
+          matchup_score?: number;
+          total_games?: number;
         }>
       >()
       .notNull(),

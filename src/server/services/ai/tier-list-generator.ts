@@ -8,6 +8,7 @@ import {
 } from "@/server/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import type { Format, ArchetypeTier } from "@/types";
+import { calculateMetaScores, type ArchetypeRawData } from "../meta-scoring";
 
 const anthropic = new Anthropic();
 
@@ -127,17 +128,30 @@ export async function generateAITierList(
     })
   );
 
-  // Calculate usage rates
+  // Calculate usage rates and meta scores
   const totalPlacements = archetypeData.reduce(
     (sum, a) => sum + a.totalPlacements,
     0
   );
 
+  const rawForScoring: ArchetypeRawData[] = archetypeData.map((a) => ({
+    archetypeId: a.id,
+    usageRate: totalPlacements > 0 ? a.totalPlacements / totalPlacements : 0,
+    winRate: a.overallWinRate / 100,
+    top8Count: a.top8,
+    top32Count: a.top32,
+    totalPlacements: a.totalPlacements,
+    totalGames: a.matchupSpread,
+    matchupWinRates: [],
+  }));
+  const metaScores = calculateMetaScores(rawForScoring);
+  const scoreMap = new Map(metaScores.map((s) => [s.archetypeId, s.metaScore]));
+
   const archetypeLines = archetypeData
     .sort((a, b) => b.totalPlacements - a.totalPlacements)
     .map(
       (a) =>
-        `- ${a.name} (id: ${a.id}): ${a.totalPlacements} placements (${totalPlacements > 0 ? Math.round((a.totalPlacements / totalPlacements) * 100) : 0}% usage), ${a.top8} top-8, ${a.top32} top-32, ${a.overallWinRate}% win rate, ${a.matchupSpread} matchup data points`
+        `- ${a.name} (id: ${a.id}): ${a.totalPlacements} placements (${totalPlacements > 0 ? Math.round((a.totalPlacements / totalPlacements) * 100) : 0}% usage), ${a.top8} top-8, ${a.top32} top-32, ${a.overallWinRate}% win rate, ${a.matchupSpread} matchup data points, meta score: ${scoreMap.get(a.id) ?? 0}/100`
     )
     .join("\n");
 

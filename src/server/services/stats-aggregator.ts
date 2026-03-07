@@ -2,6 +2,7 @@ import { db } from "@/server/db";
 import { matchupStats, metaSnapshots, archetypes, tournamentStandings } from "@/server/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { calculateMetaScores, type ArchetypeRawData } from "./meta-scoring";
 
 export async function aggregateMatchupStats(format: "standard" | "expanded" = "standard") {
   const thirtyDaysAgo = new Date();
@@ -66,7 +67,8 @@ export async function generateMetaSnapshot(format: "standard" | "expanded" = "st
 
   const total = totalStandings[0]?.count || 1;
 
-  const snapshotData = [];
+  // Gather raw data for each archetype
+  const rawDataMap = new Map<string, ArchetypeRawData>();
 
   for (const arch of activeArchetypes) {
     const archStandings = await db
@@ -74,17 +76,136 @@ export async function generateMetaSnapshot(format: "standard" | "expanded" = "st
       .from(tournamentStandings)
       .where(eq(tournamentStandings.archetypeId, arch.id));
 
-    const count = archStandings[0]?.count || 0;
-    const usageRate = count / total;
+    const top8Result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(tournamentStandings)
+      .where(
+        and(
+          eq(tournamentStandings.archetypeId, arch.id),
+          sql`${tournamentStandings.placing} <= 8`
+        )
+      );
 
-    snapshotData.push({
-      archetype_id: arch.id,
-      usage_rate: usageRate,
-      win_rate: 0,
-      tier: arch.tier || "C",
-      justification: arch.description || undefined,
+    const top32Result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(tournamentStandings)
+      .where(
+        and(
+          eq(tournamentStandings.archetypeId, arch.id),
+          sql`${tournamentStandings.placing} <= 32`
+        )
+      );
+
+    // Calculate win rate from matchup stats
+    const matchups = await db
+      .select()
+      .from(matchupStats)
+      .where(
+        and(
+          eq(matchupStats.format, format),
+          sql`${matchupStats.totalGames} > 0`,
+          sql`(${matchupStats.archetypeAId} = ${arch.id} OR ${matchupStats.archetypeBId} = ${arch.id})`
+        )
+      );
+
+    let totalWins = 0;
+    let totalGames = 0;
+    for (const m of matchups) {
+      if (m.archetypeAId === arch.id) {
+        totalWins += m.wins;
+      } else {
+        totalWins += m.losses;
+      }
+      totalGames += m.totalGames;
+    }
+
+    const placementCount = archStandings[0]?.count || 0;
+    const usageRate = placementCount / total;
+    const winRate = totalGames > 0 ? totalWins / totalGames : 0;
+
+    rawDataMap.set(arch.id, {
+      archetypeId: arch.id,
+      usageRate,
+      winRate,
+      top8Count: top8Result[0]?.count ?? 0,
+      top32Count: top32Result[0]?.count ?? 0,
+      totalPlacements: placementCount,
+      totalGames,
+      matchupWinRates: [],
     });
   }
+
+  // Find top 5 decks by usage for matchup weighting
+  const allRaw = Array.from(rawDataMap.values());
+  const top5ByUsage = [...allRaw]
+    .sort((a, b) => b.usageRate - a.usageRate)
+    .slice(0, 5);
+
+  // Populate matchup win rates against top 5
+  for (const arch of allRaw) {
+    const matchupWinRates: ArchetypeRawData["matchupWinRates"] = [];
+
+    for (const opponent of top5ByUsage) {
+      if (opponent.archetypeId === arch.archetypeId) continue;
+
+      const pairMatchups = await db
+        .select()
+        .from(matchupStats)
+        .where(
+          and(
+            eq(matchupStats.format, format),
+            sql`${matchupStats.totalGames} > 0`,
+            sql`(
+              (${matchupStats.archetypeAId} = ${arch.archetypeId} AND ${matchupStats.archetypeBId} = ${opponent.archetypeId})
+              OR
+              (${matchupStats.archetypeAId} = ${opponent.archetypeId} AND ${matchupStats.archetypeBId} = ${arch.archetypeId})
+            )`
+          )
+        );
+
+      let wins = 0;
+      let games = 0;
+      for (const m of pairMatchups) {
+        if (m.archetypeAId === arch.archetypeId) {
+          wins += m.wins;
+        } else {
+          wins += m.losses;
+        }
+        games += m.totalGames;
+      }
+
+      if (games > 0) {
+        matchupWinRates.push({
+          opponentUsageRate: opponent.usageRate,
+          winRate: wins / games,
+        });
+      }
+    }
+
+    arch.matchupWinRates = matchupWinRates;
+  }
+
+  // Calculate meta scores
+  const scores = calculateMetaScores(allRaw);
+  const scoreMap = new Map(scores.map((s) => [s.archetypeId, s]));
+
+  const snapshotData = activeArchetypes.map((arch) => {
+    const raw = rawDataMap.get(arch.id)!;
+    const score = scoreMap.get(arch.id);
+
+    return {
+      archetype_id: arch.id,
+      usage_rate: raw.usageRate,
+      win_rate: raw.winRate,
+      tier: arch.tier || "C",
+      justification: arch.description || undefined,
+      meta_score: score?.metaScore ?? 0,
+      top8_rate: raw.totalPlacements > 0 ? raw.top8Count / raw.totalPlacements : 0,
+      top32_rate: raw.totalPlacements > 0 ? raw.top32Count / raw.totalPlacements : 0,
+      matchup_score: score?.matchupScore ?? 0.5,
+      total_games: raw.totalGames,
+    };
+  });
 
   await db.insert(metaSnapshots).values({
     id: randomUUID(),
