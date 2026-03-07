@@ -36,16 +36,16 @@ const CARD_DATA: Record<string, string> = {
 
   // --- Pokemon: Pidgeot line ---
   "Pidgey": cardUrl("MEW", 16),
-  "Pidgeotto": cardUrl("OBF", 163),
+  "Pidgeotto": cardUrl("MEW", 17),
   "Pidgeot ex": cardUrl("OBF", 164),
 
   // --- Pokemon: Alakazam line ---
-  "Abra": cardUrl("MEW", 63),
-  "Kadabra": cardUrl("MEW", 64),
+  "Abra": cardUrl("MEG", 54),
+  "Kadabra": cardUrl("MEG", 55),
   "Alakazam ex": cardUrl("MEW", 65),
 
   // --- Pokemon: Greninja line ---
-  "Froakie": cardUrl("TWM", 56),
+  "Froakie": cardUrl("OBF", 56),
   "Frogadier": cardUrl("TWM", 57),
   "Greninja ex": cardUrl("TWM", 106),
 
@@ -55,8 +55,8 @@ const CARD_DATA: Record<string, string> = {
   "Blaziken": cardUrl("DRI", 42),
 
   // --- Pokemon: Conkeldurr line ---
-  "Timburr": cardUrl("TWM", 103),
-  "Gurdurr": cardUrl("TWM", 104),
+  "Timburr": cardUrl("BLK", 47),
+  "Gurdurr": cardUrl("BLK", 48),
   "Conkeldurr": cardUrl("TWM", 105),
 
   // --- Pokemon: Hydreigon line ---
@@ -78,24 +78,24 @@ const CARD_DATA: Record<string, string> = {
   "Hariyama": cardUrl("MEG", 73),
 
   // --- Pokemon: Ogerpon ---
-  "Teal Mask Ogerpon ex": cardUrl("TWM", 24),
+  "Teal Mask Ogerpon ex": cardUrl("TWM", 25),
 
   // --- Pokemon: Meganium line ---
-  "Chikorita": cardUrl("ASC", 8),
-  "Bayleef": cardUrl("ASC", 9),
-  "Meganium": cardUrl("ASC", 10),
+  "Chikorita": cardUrl("MEG", 8),
+  "Bayleef": cardUrl("MEG", 9),
+  "Meganium": cardUrl("MEG", 10),
 
   // --- Pokemon: Raging Bolt ---
   "Raging Bolt": cardUrl("SCR", 111),
   "Raging Bolt ex": cardUrl("TEF", 123),
 
   // --- Pokemon: Gholdengo line ---
-  "Gimmighoul": cardUrl("MEG", 67),
+  "Gimmighoul": cardUrl("SSP", 97),
   "Gholdengo ex": cardUrl("PAR", 139),
 
   // --- Pokemon: N's Zoroark line ---
-  "N's Zorua": cardUrl("ASC", 136),
-  "N's Zoroark": cardUrl("ASC", 137),
+  "N's Zorua": cardUrl("JTG", 97),
+  "N's Zoroark": cardUrl("JTG", 98),
 
   // --- Pokemon: Marnie's Grimmsnarl line ---
   "Marnie's Impidimp": cardUrl("DRI", 134),
@@ -114,11 +114,11 @@ const CARD_DATA: Record<string, string> = {
 
   // --- Pokemon: Hop's Zacian ---
   "Hop's Zacian V": cardUrl("JTG", 111),
-  "Hop's Cramorant": cardUrl("ASC", 177),
+  "Hop's Cramorant": cardUrl("JTG", 138),
 
   // --- Pokemon: Froslass line ---
-  "Snorunt": cardUrl("ASC", 46),
-  "Froslass": cardUrl("ASC", 47),
+  "Snorunt": cardUrl("TWM", 51),
+  "Froslass": cardUrl("TWM", 53),
 
   // --- Pokemon: Jellicent ---
   "Frillish": cardUrl("WHT", 44),
@@ -126,7 +126,7 @@ const CARD_DATA: Record<string, string> = {
 
   // --- Pokemon: Ho-Oh + Armarouge ---
   "Ho-Oh ex": cardUrl("DRI", 39),
-  "Charcadet": cardUrl("SVI", 40),
+  "Charcadet": cardUrl("PFL", 19),
   "Armarouge": cardUrl("SVI", 41),
 
   // --- Pokemon: Other notable Pokemon ---
@@ -137,9 +137,9 @@ const CARD_DATA: Record<string, string> = {
   "Latias ex": cardUrl("SSP", 76),
   "Iron Leaves ex": cardUrl("TEF", 25),
   "Squawkabilly ex": cardUrl("PAL", 169),
-  "Ditto": cardUrl("PAF", 201),
+  "Ditto": cardUrl("MEW", 132),
   "Klefki": cardUrl("SVI", 96),
-  "Fan Rotom": cardUrl("ASC", 171),
+  "Fan Rotom": cardUrl("SCR", 118),
   "Budew": cardUrl("ASC", 16),
   "Hawlucha": cardUrl("SVI", 118),
   "Scream Tail": cardUrl("PAR", 86),
@@ -148,7 +148,7 @@ const CARD_DATA: Record<string, string> = {
   "Slither Wing": cardUrl("SFA", 26),
   "Terapagos ex": cardUrl("SCR", 128),
   "Entei V": cardUrl("BRS", 22),
-  "Moltres": cardUrl("MEW", 146),
+  "Moltres": cardUrl("PFL", 14),
   "Lunatone": cardUrl("MEG", 74),
   "Solrock": cardUrl("MEG", 75),
   "Yveltal": cardUrl("MEG", 88),
@@ -159,22 +159,22 @@ const CARD_DATA: Record<string, string> = {
   "Genesect": cardUrl("SFA", 40),
   "Genesect ex": cardUrl("BLK", 67),
   "Psyduck": cardUrl("ASC", 39),
-  "Shaymin": cardUrl("TEF", 13),
-  "Lillie's Clefairy ex": cardUrl("ASC", 76),
-  "Toedscool": cardUrl("OBF", 118),
+  "Shaymin": cardUrl("DRI", 10),
+  "Lillie's Clefairy ex": cardUrl("JTG", 56),
+  "Toedscool": cardUrl("PAR", 16),
   "Toedscruel": cardUrl("PAR", 17),
-  "Chi-Yu": cardUrl("PAR", 42),
-  "N's Zoroark ex": cardUrl("ASC", 137),
-  "N's Darumaka": cardUrl("ASC", 132),
-  "N's Darmanitan": cardUrl("ASC", 133),
-  "N's Reshiram": cardUrl("ASC", 140),
+  "Chi-Yu": cardUrl("PAR", 29),
+  "N's Zoroark ex": cardUrl("JTG", 98),
+  "N's Darumaka": cardUrl("JTG", 26),
+  "N's Darmanitan": cardUrl("JTG", 27),
+  "N's Reshiram": cardUrl("JTG", 116),
   "Wellspring Mask Ogerpon ex": cardUrl("TWM", 64),
 
   // --- Supporters ---
   "Iono": cardUrl("PAL", 185),
   "Boss's Orders": cardUrl("MEG", 114),
   "Lillie's Determination": cardUrl("MEG", 119),
-  "Professor's Research": cardUrl("SVI", 189),
+  "Professor's Research": cardUrl("JTG", 155),
   "Arven": cardUrl("OBF", 186),
   "Professor Sada's Vitality": cardUrl("PAR", 170),
   "Professor Turo's Scenario": cardUrl("PAR", 171),
@@ -184,16 +184,16 @@ const CARD_DATA: Record<string, string> = {
   "Dawn": cardUrl("PFL", 87),
   "Briar": cardUrl("SCR", 132),
   "Hilda": cardUrl("WHT", 84),
-  "Cynthia's Ambition": cardUrl("PRE", 60),
-  "Ethan's Earnestness": cardUrl("PRE", 58),
-  "Hop": cardUrl("JTG", 86),
+  "Cynthia's Ambition": cardUrl("BRS", 138),
+  "Ethan's Adventure": cardUrl("DRI", 165),
+  "Hop": cardUrl("SSH", 165),
   "Korrina": cardUrl("FFI", 95),
   "Erika's Invitation": cardUrl("MEW", 160),
   "Ciphermaniac's Codebreaking": cardUrl("TEF", 145),
-  "Cyrano": cardUrl("ASC", 170),
-  "Black Belt's Training": cardUrl("ASC", 163),
-  "Xerosic's Machinations": cardUrl("ASC", 180),
-  "Acerola's Mischief": cardUrl("ASC", 161),
+  "Cyrano": cardUrl("SSP", 170),
+  "Black Belt's Training": cardUrl("JTG", 143),
+  "Xerosic's Machinations": cardUrl("SFA", 64),
+  "Acerola's Mischief": cardUrl("MEG", 113),
 
   // --- Items ---
   "Ultra Ball": cardUrl("MEG", 131),
@@ -205,20 +205,20 @@ const CARD_DATA: Record<string, string> = {
   "Super Rod": cardUrl("PAL", 188),
   "Secret Box": cardUrl("TWM", 163),
   "Earthen Vessel": cardUrl("PAR", 163),
-  "Prime Catcher": cardUrl("TWM", 157),
+  "Prime Catcher": cardUrl("TEF", 157),
   "Energy Switch": cardUrl("MEG", 115),
   "Energy Retrieval": cardUrl("SVI", 171),
   "Pokegear 3.0": cardUrl("SVI", 186),
   "Precious Trolley": cardUrl("SSP", 185),
-  "Superior Energy Retrieval": cardUrl("OBF", 189),
+  "Superior Energy Retrieval": cardUrl("PAL", 189),
   "Fighting Gong": cardUrl("MEG", 116),
   "Air Balloon": cardUrl("ASC", 181),
-  "Unfair Stamp": cardUrl("ASC", 199),
-  "N's PP Up": cardUrl("ASC", 192),
+  "Unfair Stamp": cardUrl("TWM", 165),
+  "N's PP Up": cardUrl("JTG", 153),
   "Pal Pad": cardUrl("SVI", 182),
-  "Powerglass": cardUrl("ASC", 195),
-  "Jumbo Ice Cream": cardUrl("ASC", 189),
-  "Enhanced Hammer": cardUrl("ASC", 185),
+  "Powerglass": cardUrl("SFA", 63),
+  "Jumbo Ice Cream": cardUrl("PFL", 91),
+  "Enhanced Hammer": cardUrl("TWM", 148),
 
   // --- Pokemon Tools ---
   "Bravery Charm": cardUrl("PAL", 173),
@@ -239,8 +239,8 @@ const CARD_DATA: Record<string, string> = {
   "Magma Basin": cardUrl("BRS", 144),
   "Town Store": cardUrl("OBF", 196),
   "Team Rocket's Watchtower": cardUrl("DRI", 180),
-  "N's Castle": cardUrl("ASC", 193),
-  "Lively Stadium": cardUrl("ASC", 190),
+  "N's Castle": cardUrl("JTG", 152),
+  "Lively Stadium": cardUrl("SSP", 180),
 
   // --- Energy ---
   "Fire Energy": cardUrl("MEE", 2),
@@ -255,7 +255,7 @@ const CARD_DATA: Record<string, string> = {
   "Metal Energy": cardUrl("MEE", 8),
   "Mist Energy": cardUrl("TEF", 161),
   "Jet Energy": cardUrl("PAL", 190),
-  "Reversal Energy": cardUrl("ASC", 202),
+  "Reversal Energy": cardUrl("PAL", 192),
 };
 
 /**
