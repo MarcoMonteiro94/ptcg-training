@@ -5,7 +5,7 @@ import { getArchetypeBySlug } from "@/server/queries/archetypes";
 import { getMatchupsForArchetype } from "@/server/queries/matchups";
 import { cn } from "@/lib/utils";
 import { BackButton } from "@/components/shared/back-button";
-import { getArchetypeImages, getPokemonImageUrl } from "@/lib/pokemon-images";
+import { getArchetypeImages } from "@/lib/pokemon-images";
 
 export const revalidate = 3600;
 
@@ -118,10 +118,13 @@ export default async function MatchupDetailPage({
               <div className="space-y-1.5">
                 {section.items.map((m) => {
                   const badge = getWinRateBadge(m.winRate ?? 0);
+                  const opponentImgs = getArchetypeImages(m.opponentSlug);
                   return (
                     <div key={m.opponentId} className="flex justify-between items-center text-sm">
                       <div className="flex items-center gap-1.5 truncate mr-2">
-                        <Image src={getPokemonImageUrl(m.opponentName)} alt="" width={20} height={20} className="h-5 w-5 shrink-0" unoptimized />
+                        {opponentImgs[0] && (
+                          <Image src={opponentImgs[0]} alt="" width={20} height={20} className="h-5 w-5 shrink-0" unoptimized />
+                        )}
                         <span className="truncate">{m.opponentName}</span>
                       </div>
                       <Badge
@@ -158,7 +161,12 @@ export default async function MatchupDetailPage({
                   className="flex justify-between items-center text-sm border-b border-border/30 pb-1.5 last:border-0"
                 >
                   <div className="flex items-center gap-1.5">
-                    <Image src={getPokemonImageUrl(m.opponentName)} alt="" width={20} height={20} className="h-5 w-5 shrink-0" unoptimized />
+                    {(() => {
+                      const imgs = getArchetypeImages(m.opponentSlug);
+                      return imgs[0] ? (
+                        <Image src={imgs[0]} alt="" width={20} height={20} className="h-5 w-5 shrink-0" unoptimized />
+                      ) : null;
+                    })()}
                     <span>vs {m.opponentName}</span>
                   </div>
                   <div className="flex items-center gap-3">

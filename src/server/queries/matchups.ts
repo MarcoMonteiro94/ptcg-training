@@ -61,7 +61,7 @@ export async function getMatchupsForArchetype(archetypeId: string) {
 
   const opponents = opponentIds.size > 0
     ? await db
-        .select({ id: archetypes.id, name: archetypes.name })
+        .select({ id: archetypes.id, name: archetypes.name, slug: archetypes.slug })
         .from(archetypes)
         .where(
           // drizzle doesn't support IN directly, so filter in JS
@@ -70,6 +70,7 @@ export async function getMatchupsForArchetype(archetypeId: string) {
     : [];
 
   const nameMap = new Map(opponents.map((o) => [o.id, o.name]));
+  const slugMap = new Map(opponents.map((o) => [o.id, o.slug]));
 
   // Combine: for A rows, use as-is; for B rows, flip perspective
   const combined = [
@@ -77,6 +78,7 @@ export async function getMatchupsForArchetype(archetypeId: string) {
       id: m.id,
       opponentId: m.archetypeBId,
       opponentName: nameMap.get(m.archetypeBId) || m.archetypeBId,
+      opponentSlug: slugMap.get(m.archetypeBId) || m.archetypeBId,
       winRate: m.winRate,
       totalGames: m.totalGames,
     })),
@@ -84,6 +86,7 @@ export async function getMatchupsForArchetype(archetypeId: string) {
       id: m.id,
       opponentId: m.archetypeAId,
       opponentName: nameMap.get(m.archetypeAId) || m.archetypeAId,
+      opponentSlug: slugMap.get(m.archetypeAId) || m.archetypeAId,
       winRate: m.winRate != null ? 1 - m.winRate : null,
       totalGames: m.totalGames,
     })),
