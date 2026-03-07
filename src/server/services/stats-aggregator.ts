@@ -119,16 +119,16 @@ export async function generateMetaSnapshot(format: "standard" | "expanded" = "st
       totalGames += m.totalGames;
     }
 
-    const placementCount = archStandings[0]?.count || 0;
-    const usageRate = placementCount / total;
+    const placementCount = Number(archStandings[0]?.count) || 0;
+    const usageRate = placementCount / Number(total);
     const winRate = totalGames > 0 ? totalWins / totalGames : 0;
 
     rawDataMap.set(arch.id, {
       archetypeId: arch.id,
       usageRate,
       winRate,
-      top8Count: top8Result[0]?.count ?? 0,
-      top32Count: top32Result[0]?.count ?? 0,
+      top8Count: Number(top8Result[0]?.count) || 0,
+      top32Count: Number(top32Result[0]?.count) || 0,
       totalPlacements: placementCount,
       totalGames,
       matchupWinRates: [],
