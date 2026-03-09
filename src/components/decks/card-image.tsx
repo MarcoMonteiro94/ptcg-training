@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { getCardImageUrl } from "@/lib/card-images";
+import { getCardImageUrl, getCardDisplayName } from "@/lib/card-images";
 
 interface CardImageProps {
   cardName: string;
@@ -19,6 +19,7 @@ const sizes = {
 export function CardImage({ cardName, count, size = "sm" }: CardImageProps) {
   const [error, setError] = useState(false);
   const imageUrl = getCardImageUrl(cardName);
+  const displayName = getCardDisplayName(cardName);
   const { width, height, className } = sizes[size];
 
   if (!imageUrl || error) {
@@ -28,7 +29,7 @@ export function CardImage({ cardName, count, size = "sm" }: CardImageProps) {
       >
         <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_50%_50%,oklch(0.75_0.18_165),transparent_70%)]" />
         <span className="text-[9px] text-muted-foreground/50 text-center leading-tight font-mono z-10">
-          {cardName}
+          {displayName}
         </span>
         {count != null && (
           <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] font-mono font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-md z-10">
@@ -43,7 +44,7 @@ export function CardImage({ cardName, count, size = "sm" }: CardImageProps) {
     <div className={`${className} relative group`}>
       <Image
         src={imageUrl}
-        alt={cardName}
+        alt={displayName}
         width={width}
         height={height}
         className="rounded-lg shadow-md transition-transform duration-200 group-hover:scale-105 group-hover:shadow-xl"

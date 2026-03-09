@@ -56,9 +56,11 @@ function parseDeckList(text: string): { cards: Array<{ card_id: string; count: n
     }
 
     const count = parseInt(match[1]);
+    const cardName = match[2].trim();
     const setCode = match[3];
     const number = match[4];
-    const cardId = `${setCode}-${number}`;
+    // Store as "Name|SET-NUM" so we keep both the readable name and image lookup key
+    const cardId = `${cardName}|${setCode}-${number}`;
 
     cards.push({ card_id: cardId, count });
   }

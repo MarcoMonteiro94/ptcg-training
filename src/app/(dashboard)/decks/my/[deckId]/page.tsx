@@ -8,6 +8,7 @@ import { getAllArchetypes } from "@/server/queries/archetypes";
 import { BackButton } from "@/components/shared/back-button";
 import { CardImage } from "@/components/decks/card-image";
 import { getArchetypeImages } from "@/lib/pokemon-images";
+import { getCardDisplayName } from "@/lib/card-images";
 import { UserDeckActions } from "@/components/decks/user-deck-actions";
 
 export const metadata: Metadata = {
@@ -41,8 +42,9 @@ const KNOWN_TRAINERS = new Set([
 ]);
 
 function isPokemonCard(cardId: string): boolean {
-  if (ENERGY_RE.test(cardId)) return false;
-  if (KNOWN_TRAINERS.has(cardId.toLowerCase())) return false;
+  const name = getCardDisplayName(cardId);
+  if (ENERGY_RE.test(name)) return false;
+  if (KNOWN_TRAINERS.has(name.toLowerCase())) return false;
   return true;
 }
 
@@ -84,8 +86,8 @@ export default async function UserDeckDetailPage({
   const totalCards = deck.cards.reduce((sum, c) => sum + c.count, 0);
 
   const pokemon = deck.cards.filter((c) => isPokemonCard(c.card_id));
-  const trainers = deck.cards.filter((c) => !isPokemonCard(c.card_id) && !ENERGY_RE.test(c.card_id));
-  const energy = deck.cards.filter((c) => ENERGY_RE.test(c.card_id));
+  const trainers = deck.cards.filter((c) => !isPokemonCard(c.card_id) && !ENERGY_RE.test(getCardDisplayName(c.card_id)));
+  const energy = deck.cards.filter((c) => ENERGY_RE.test(getCardDisplayName(c.card_id)));
 
   const pokemonCount = pokemon.reduce((s, c) => s + c.count, 0);
   const trainerCount = trainers.reduce((s, c) => s + c.count, 0);

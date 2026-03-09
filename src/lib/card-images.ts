@@ -259,24 +259,62 @@ const CARD_DATA: Record<string, string> = {
 };
 
 /**
- * Returns the card image URL for a given card name.
- * Returns null if the card is not in our mapping.
+ * Returns the card image URL for a given card identifier.
+ * Accepts:
+ *  - Card name: "Dreepy"
+ *  - Set-number code: "ASC-247"
+ *  - Combined format: "Dreepy|ASC-247" (name + set code for lookup)
  */
-export function getCardImageUrl(cardName: string): string | null {
-  return CARD_DATA[cardName] ?? null;
+export function getCardImageUrl(cardId: string): string | null {
+  // Try exact name match first
+  if (CARD_DATA[cardId]) return CARD_DATA[cardId];
+
+  // Handle "Name|SET-NUM" combined format
+  const pipeIdx = cardId.indexOf("|");
+  if (pipeIdx !== -1) {
+    const name = cardId.substring(0, pipeIdx);
+    const setNum = cardId.substring(pipeIdx + 1);
+    // Try name match
+    if (CARD_DATA[name]) return CARD_DATA[name];
+    // Fall back to set-number
+    const m = setNum.match(/^([A-Z]{2,4})-(\d+)$/);
+    if (m) return cardUrl(m[1], parseInt(m[2]));
+  }
+
+  // Try SET-NUMBER format (e.g. "ASC-247" → cardUrl("ASC", 247))
+  const setNumMatch = cardId.match(/^([A-Z]{2,4})-(\d+)$/);
+  if (setNumMatch) {
+    return cardUrl(setNumMatch[1], parseInt(setNumMatch[2]));
+  }
+
+  return null;
+}
+
+/**
+ * Extracts the display name from a card identifier.
+ * "Dreepy|ASC-247" → "Dreepy", "ASC-247" → "ASC-247", "Dreepy" → "Dreepy"
+ */
+export function getCardDisplayName(cardId: string): string {
+  const pipeIdx = cardId.indexOf("|");
+  return pipeIdx !== -1 ? cardId.substring(0, pipeIdx) : cardId;
 }
 
 /**
  * Returns the high-resolution card image URL.
  * (Limitless CDN LG size is already high-res)
  */
-export function getCardImageUrlHires(cardName: string): string | null {
-  return CARD_DATA[cardName] ?? null;
+export function getCardImageUrlHires(cardId: string): string | null {
+  return getCardImageUrl(cardId);
 }
 
 /**
- * Check if we have a card image for this name.
+ * Check if we have a card image for this identifier.
  */
-export function hasCardImage(cardName: string): boolean {
-  return cardName in CARD_DATA;
+export function hasCardImage(cardId: string): boolean {
+  if (cardId in CARD_DATA) return true;
+  if (cardId.includes("|")) {
+    const name = cardId.substring(0, cardId.indexOf("|"));
+    if (name in CARD_DATA) return true;
+  }
+  return /^[A-Z]{2,4}-\d+$/.test(cardId) || cardId.includes("|");
 }

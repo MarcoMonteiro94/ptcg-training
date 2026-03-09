@@ -39,8 +39,17 @@ interface UserDeckActionsProps {
 
 function cardsToText(cards: Array<{ card_id: string; count: number }>): string {
   return cards.map((c) => {
+    // Handle "Name|SET-NUM" format
+    const pipeIdx = c.card_id.indexOf("|");
+    if (pipeIdx !== -1) {
+      const name = c.card_id.substring(0, pipeIdx);
+      const setNum = c.card_id.substring(pipeIdx + 1);
+      const [set, num] = setNum.split("-");
+      return `${c.count} ${name} ${set} ${num}`;
+    }
+    // Legacy "SET-NUM" format
     const parts = c.card_id.split("-");
-    if (parts.length === 2) {
+    if (parts.length === 2 && /^[A-Z]{2,4}$/.test(parts[0])) {
       return `${c.count} ${parts[0]} ${parts[1]}`;
     }
     return `${c.count} ${c.card_id}`;
@@ -63,7 +72,8 @@ function parseDeckList(text: string): { cards: Array<{ card_id: string; count: n
       continue;
     }
 
-    cards.push({ card_id: `${match[3]}-${match[4]}`, count: parseInt(match[1]) });
+    const cardName = match[2].trim();
+    cards.push({ card_id: `${cardName}|${match[3]}-${match[4]}`, count: parseInt(match[1]) });
   }
 
   return { cards, errors };
