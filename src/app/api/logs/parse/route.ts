@@ -48,6 +48,9 @@ export async function POST(request: Request) {
   // Resolve archetype names for display
   const archetypeMap = new Map(allArchetypes.map((a) => [a.id, a.name]));
 
+  // For TCG Masters logs, extract internal winner info
+  const winnerPlayer = (parsed as unknown as Record<string, unknown>)._winnerPlayer as string | undefined;
+
   return NextResponse.json({
     parsed: {
       playerName: parsed.playerName,
@@ -58,6 +61,9 @@ export async function POST(request: Request) {
       playerCards: parsed.playerCards,
       opponentCards: parsed.opponentCards,
       confidence: parsed.confidence,
+      source: parsed.source,
+      needsPlayerIdentity: parsed.needsPlayerIdentity,
+      winnerPlayer: winnerPlayer ?? null,
     },
     classification: {
       playerArchetypeId: classification.playerArchetypeId,

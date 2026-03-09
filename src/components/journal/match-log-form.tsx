@@ -32,7 +32,6 @@ export function MatchLogForm({ archetypes }: MatchLogFormProps) {
   const [userArchetypeId, setUserArchetypeId] = useState("");
   const [result, setResult] = useState<"win" | "loss" | "draw">("win");
   const [wentFirst, setWentFirst] = useState<string>("");
-  const [format, setFormat] = useState<"standard" | "expanded" | "unlimited">("standard");
   const [notes, setNotes] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
@@ -44,7 +43,7 @@ export function MatchLogForm({ archetypes }: MatchLogFormProps) {
         opponentArchetypeId,
         result,
         wentFirst: wentFirst === "" ? undefined : wentFirst === "true",
-        format,
+        format: "standard",
         notes: notes || undefined,
       });
 
@@ -102,7 +101,7 @@ export function MatchLogForm({ archetypes }: MatchLogFormProps) {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label className="text-xs font-mono uppercase tracking-wider">Result *</Label>
             <Select value={result} onValueChange={(v) => setResult(v as typeof result)}>
@@ -126,20 +125,6 @@ export function MatchLogForm({ archetypes }: MatchLogFormProps) {
               <SelectContent>
                 <SelectItem value="true">Yes</SelectItem>
                 <SelectItem value="false">No</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-xs font-mono uppercase tracking-wider">Format</Label>
-            <Select value={format} onValueChange={(v) => setFormat(v as typeof format)}>
-              <SelectTrigger className="bg-muted/20 border-border/50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="standard">Standard</SelectItem>
-                <SelectItem value="expanded">Expanded</SelectItem>
-                <SelectItem value="unlimited">Unlimited</SelectItem>
               </SelectContent>
             </Select>
           </div>

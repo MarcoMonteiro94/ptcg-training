@@ -74,6 +74,55 @@ export async function createMatchLog(input: CreateMatchLogInput) {
   return { success: true };
 }
 
+export async function createMatchLogBatch(inputs: CreateMatchLogInput[]) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Unauthorized" };
+  }
+
+  if (inputs.length === 0 || inputs.length > 5) {
+    return { error: "Must provide 1-5 match logs" };
+  }
+
+  for (const input of inputs) {
+    const parsed = createMatchLogSchema.safeParse(input);
+    if (!parsed.success) {
+      return { error: parsed.error.message };
+    }
+  }
+
+  const values = inputs.map((input) => ({
+    id: randomUUID(),
+    userId: user.id,
+    userArchetypeId: input.userArchetypeId || null,
+    opponentArchetypeId: input.opponentArchetypeId,
+    result: input.result,
+    wentFirst: input.wentFirst ?? null,
+    format: input.format,
+    notes: input.notes || null,
+    tags: input.tags || [],
+  }));
+
+  await db.insert(matchLogs).values(values);
+
+  // Auto-complete training goals for the opponent
+  try {
+    await autoCompleteTrainingGoals(user.id, inputs[0].opponentArchetypeId);
+  } catch {
+    // Non-critical
+  }
+
+  revalidatePath("/journal");
+  revalidatePath("/journal/stats");
+  revalidatePath("/training");
+
+  return { success: true };
+}
+
 export async function updateMatchLog(input: UpdateMatchLogInput) {
   const supabase = await createClient();
   const {

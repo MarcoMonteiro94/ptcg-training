@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { submitParsedLog } from "@/server/actions/log-import";
 import { toast } from "sonner";
-import { Clipboard, Loader2, Check, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { Clipboard, Loader2, Check, AlertTriangle, ChevronDown, ChevronUp, User } from "lucide-react";
 
 interface Archetype {
   id: string;
@@ -36,6 +36,9 @@ interface ParseResult {
     playerCards: string[];
     opponentCards: string[];
     confidence: number;
+    source: "ptcg-live" | "tcg-masters" | "unknown";
+    needsPlayerIdentity: boolean;
+    winnerPlayer: string | null; // "P1" or "P2" for TCG Masters
   };
   classification: {
     playerArchetypeId: string | null;
@@ -61,6 +64,9 @@ export function LogPasteForm({ archetypes }: LogPasteFormProps) {
   const [overrideOpponent, setOverrideOpponent] = useState("");
   const [overrideResult, setOverrideResult] = useState("");
 
+  // TCG Masters player identity state
+  const [selectedIdentity, setSelectedIdentity] = useState<"P1" | "P2" | null>(null);
+
   async function handleParse() {
     if (!logText.trim()) return;
 
@@ -84,15 +90,20 @@ export function LogPasteForm({ archetypes }: LogPasteFormProps) {
       setParseResult(data);
       setShowLog(false); // Collapse log after parsing
 
-      // Pre-fill overrides from parsed data
-      if (data.classification.playerArchetypeId) {
-        setOverridePlayer(data.classification.playerArchetypeId);
-      }
-      if (data.classification.opponentArchetypeId) {
-        setOverrideOpponent(data.classification.opponentArchetypeId);
-      }
-      if (data.parsed.result) {
-        setOverrideResult(data.parsed.result);
+      // Reset identity selection for new parse
+      setSelectedIdentity(null);
+
+      // Pre-fill overrides from parsed data (only for non-TCG Masters)
+      if (!data.parsed.needsPlayerIdentity) {
+        if (data.classification.playerArchetypeId) {
+          setOverridePlayer(data.classification.playerArchetypeId);
+        }
+        if (data.classification.opponentArchetypeId) {
+          setOverrideOpponent(data.classification.opponentArchetypeId);
+        }
+        if (data.parsed.result) {
+          setOverrideResult(data.parsed.result);
+        }
       }
     } catch {
       toast.error("Failed to parse log");
@@ -100,6 +111,48 @@ export function LogPasteForm({ archetypes }: LogPasteFormProps) {
       setIsParsing(false);
     }
   }
+
+  function handleSelectIdentity(identity: "P1" | "P2") {
+    if (!parseResult) return;
+    setSelectedIdentity(identity);
+
+    const isP1 = identity === "P1";
+    // Resolve player/opponent cards based on identity
+    // parseResult.parsed.playerCards = P1's cards, opponentCards = P2's cards
+    const myCards = isP1 ? parseResult.parsed.playerCards : parseResult.parsed.opponentCards;
+    const theirCards = isP1 ? parseResult.parsed.opponentCards : parseResult.parsed.playerCards;
+
+    // Re-classify with resolved cards to pre-fill archetypes
+    // For now, use the existing classification but swap if needed
+    if (isP1) {
+      if (parseResult.classification.playerArchetypeId) {
+        setOverridePlayer(parseResult.classification.playerArchetypeId);
+      }
+      if (parseResult.classification.opponentArchetypeId) {
+        setOverrideOpponent(parseResult.classification.opponentArchetypeId);
+      }
+    } else {
+      // User is P2, so swap: P2's classification becomes "player"
+      if (parseResult.classification.opponentArchetypeId) {
+        setOverridePlayer(parseResult.classification.opponentArchetypeId);
+      }
+      if (parseResult.classification.playerArchetypeId) {
+        setOverrideOpponent(parseResult.classification.playerArchetypeId);
+      }
+    }
+
+    // Resolve result from winnerPlayer
+    const winner = parseResult.parsed.winnerPlayer;
+    if (winner) {
+      const won = winner === identity;
+      setOverrideResult(won ? "win" : "loss");
+    }
+
+    // Store resolved cards for display
+    setResolvedCards({ player: myCards, opponent: theirCards });
+  }
+
+  const [resolvedCards, setResolvedCards] = useState<{ player: string[]; opponent: string[] } | null>(null);
 
   function handleSubmit() {
     const finalResult = overrideResult || parseResult?.parsed.result;
@@ -115,7 +168,9 @@ export function LogPasteForm({ archetypes }: LogPasteFormProps) {
         userArchetypeId: overridePlayer || parseResult?.classification.playerArchetypeId || undefined,
         opponentArchetypeId: finalOpponent,
         result: finalResult as "win" | "loss" | "draw",
-        wentFirst: parseResult?.parsed.wentFirst ?? undefined,
+        wentFirst: parseResult?.parsed.wentFirst ?? (parseResult?.parsed.needsPlayerIdentity && selectedIdentity
+          ? undefined // TCG Masters doesn't reliably track who went first
+          : undefined),
         format: "standard",
         notes: parseResult
           ? `Imported from game log. Turns: ${parseResult.parsed.turnCount}. Parse confidence: ${Math.round(parseResult.parsed.confidence * 100)}%`
@@ -157,9 +212,14 @@ export function LogPasteForm({ archetypes }: LogPasteFormProps) {
       {parseResult && (
         <div className="rounded-xl border border-border/50 bg-card/30 p-4 space-y-4 animate-fade-in">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <h3 className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-              Detected Match Data
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+                Detected Match Data
+              </h3>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-[oklch(0.55_0.15_260/0.15)] text-[oklch(0.75_0.12_260)] border-[oklch(0.55_0.15_260/0.25)]">
+                {parseResult.parsed.source === "tcg-masters" ? "TCG Masters" : parseResult.parsed.source === "ptcg-live" ? "PTCG Live" : "Unknown"}
+              </Badge>
+            </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               {confidenceBadge(parseResult.parsed.confidence, "Parse")}
               {parseResult.classification.playerArchetypeId && confidenceBadge(parseResult.classification.playerConfidence, "Your Deck")}
@@ -174,7 +234,49 @@ export function LogPasteForm({ archetypes }: LogPasteFormProps) {
             </div>
           )}
 
-          {/* Detected info */}
+          {/* TCG Masters: Player identity selection */}
+          {parseResult.parsed.needsPlayerIdentity && !selectedIdentity && (
+            <div className="rounded-lg border border-[oklch(0.55_0.15_260/0.3)] bg-[oklch(0.55_0.15_260/0.05)] p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-[oklch(0.75_0.12_260)]" />
+                <h4 className="text-sm font-medium">Which player were you?</h4>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                TCG Masters logs use P1/P2 identifiers. Select which player you were to resolve the match result.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => handleSelectIdentity("P1")}
+                  className="rounded-lg border border-border/50 bg-muted/20 p-3 text-left hover:bg-muted/40 hover:border-border transition-colors space-y-1.5"
+                >
+                  <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Player 1</span>
+                  {parseResult.parsed.playerCards.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Cards: {parseResult.parsed.playerCards.slice(0, 5).join(", ")}
+                      {parseResult.parsed.playerCards.length > 5 && ` +${parseResult.parsed.playerCards.length - 5}`}
+                    </p>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSelectIdentity("P2")}
+                  className="rounded-lg border border-border/50 bg-muted/20 p-3 text-left hover:bg-muted/40 hover:border-border transition-colors space-y-1.5"
+                >
+                  <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Player 2</span>
+                  {parseResult.parsed.opponentCards.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Cards: {parseResult.parsed.opponentCards.slice(0, 5).join(", ")}
+                      {parseResult.parsed.opponentCards.length > 5 && ` +${parseResult.parsed.opponentCards.length - 5}`}
+                    </p>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Detected info — show after identity resolved (or immediately for PTCG Live) */}
+          {(!parseResult.parsed.needsPlayerIdentity || selectedIdentity) && (
           <div className="grid gap-3 text-sm">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-lg bg-muted/20 p-3 space-y-1.5">
@@ -190,10 +292,10 @@ export function LogPasteForm({ archetypes }: LogPasteFormProps) {
                 <p className="font-medium">
                   {parseResult.classification.playerArchetypeName || "Unknown"}
                 </p>
-                {parseResult.parsed.playerCards.length > 0 && (
+                {(resolvedCards?.player ?? parseResult.parsed.playerCards).length > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    Key cards: {parseResult.parsed.playerCards.slice(0, 6).join(", ")}
-                    {parseResult.parsed.playerCards.length > 6 && ` +${parseResult.parsed.playerCards.length - 6} more`}
+                    Key cards: {(resolvedCards?.player ?? parseResult.parsed.playerCards).slice(0, 6).join(", ")}
+                    {(resolvedCards?.player ?? parseResult.parsed.playerCards).length > 6 && ` +${(resolvedCards?.player ?? parseResult.parsed.playerCards).length - 6} more`}
                   </p>
                 )}
               </div>
@@ -211,19 +313,19 @@ export function LogPasteForm({ archetypes }: LogPasteFormProps) {
                 <p className="font-medium">
                   {parseResult.classification.opponentArchetypeName || "Unknown"}
                 </p>
-                {parseResult.parsed.opponentCards.length > 0 && (
+                {(resolvedCards?.opponent ?? parseResult.parsed.opponentCards).length > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    Key cards: {parseResult.parsed.opponentCards.slice(0, 6).join(", ")}
-                    {parseResult.parsed.opponentCards.length > 6 && ` +${parseResult.parsed.opponentCards.length - 6} more`}
+                    Key cards: {(resolvedCards?.opponent ?? parseResult.parsed.opponentCards).slice(0, 6).join(", ")}
+                    {(resolvedCards?.opponent ?? parseResult.parsed.opponentCards).length > 6 && ` +${(resolvedCards?.opponent ?? parseResult.parsed.opponentCards).length - 6} more`}
                   </p>
                 )}
               </div>
             </div>
 
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              {parseResult.parsed.result && (
+              {(overrideResult || parseResult.parsed.result) && (
                 <span>
-                  Result: <strong className="text-foreground capitalize">{parseResult.parsed.result}</strong>
+                  Result: <strong className="text-foreground capitalize">{overrideResult || parseResult.parsed.result}</strong>
                 </span>
               )}
               {parseResult.parsed.wentFirst !== null && (
@@ -236,15 +338,22 @@ export function LogPasteForm({ archetypes }: LogPasteFormProps) {
                   Turns: <strong className="text-foreground">{parseResult.parsed.turnCount}</strong>
                 </span>
               )}
-              {parseResult.parsed.playerName && (
+              {selectedIdentity && (
+                <span>
+                  You were: <strong className="text-foreground">{selectedIdentity}</strong>
+                </span>
+              )}
+              {!selectedIdentity && parseResult.parsed.playerName && (
                 <span>
                   Player: <strong className="text-foreground">{parseResult.parsed.playerName}</strong>
                 </span>
               )}
             </div>
           </div>
+          )}
 
-          {/* Override section */}
+          {/* Override section — only show after identity is resolved */}
+          {(!parseResult.parsed.needsPlayerIdentity || selectedIdentity) && (
           <div className="border-t border-border/30 pt-4 space-y-3">
             <h4 className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
               Confirm or Override
@@ -318,6 +427,7 @@ export function LogPasteForm({ archetypes }: LogPasteFormProps) {
               )}
             </Button>
           </div>
+          )}
         </div>
       )}
 
@@ -341,7 +451,7 @@ export function LogPasteForm({ archetypes }: LogPasteFormProps) {
         {showLog && (
           <>
             <Textarea
-              placeholder="Paste your PTCG Live game log here..."
+              placeholder="Paste your PTCG Live or TCG Masters game log here..."
               value={logText}
               onChange={(e) => {
                 setLogText(e.target.value);

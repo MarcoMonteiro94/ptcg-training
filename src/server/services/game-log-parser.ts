@@ -1,7 +1,9 @@
 /**
- * Parser for Pokemon TCG Live game logs.
+ * Parser for Pokemon TCG game logs.
  *
- * PTCG Live logs follow this text format:
+ * Supports two simulator formats:
+ *
+ * 1. PTCG Live:
  * - "Setup" section with coin flip, opening hands, active spot
  * - "Turn # N - PlayerName's Turn" markers
  * - "PlayerName played CardName to the Bench/Active Spot."
@@ -10,7 +12,18 @@
  * - "PlayerName's CardName used AttackName..."
  * - "Opponent conceded. PlayerName wins."
  * - Bullet lists "• CardName" for drawn/discarded cards
+ *
+ * 2. TCG Masters:
+ * - Actions prefixed with "[P1]:" or "[P2]:"
+ * - Bottom-to-top chronology (most recent action first)
+ * - "played X", "attached X to Y", "attacked with X"
+ * - "started a new turn", "took N prize(s)", "X is KO"
+ * - "evolved X into Y", "retreated X. New active: Y"
+ * - "activated X of Y", "discarded X"
+ * - Players identified as P1/P2 (no real names)
  */
+
+export type LogSource = "ptcg-live" | "tcg-masters" | "unknown";
 
 export interface ParsedGameLog {
   playerCards: string[];
@@ -21,6 +34,9 @@ export interface ParsedGameLog {
   opponentName: string | null;
   confidence: number;
   turnCount: number;
+  source: LogSource;
+  /** True when the parser cannot determine which player is the user (e.g. TCG Masters P1/P2) */
+  needsPlayerIdentity: boolean;
 }
 
 // Cards/tokens to ignore (not deck identifiers)
@@ -38,7 +54,33 @@ const IGNORE_TOKENS = new Set([
 // Energy cards to ignore (not deck identifiers)
 const ENERGY_PATTERN = /\b(basic\s+)?(fire|water|grass|electric|psychic|fighting|darkness|metal|fairy|lightning|dragon)\s+energy\b/i;
 
+/**
+ * Detects the log source format from log content.
+ */
+export function detectLogSource(logText: string): LogSource {
+  // TCG Masters uses [P1]: and [P2]: prefixes
+  if (/\[P[12]\]\s*:/m.test(logText)) return "tcg-masters";
+  // PTCG Live uses "Turn # N - PlayerName's Turn" markers
+  if (/Turn\s*#?\s*\d+\s*-\s*.+'s\s+Turn/mi.test(logText)) return "ptcg-live";
+  // Fallback heuristics
+  if (/played\s+.+\s+to\s+the\s+(?:Bench|Active\s+Spot)/i.test(logText)) return "ptcg-live";
+  if (/started a new turn/i.test(logText)) return "tcg-masters";
+  return "unknown";
+}
+
 export function parseGameLog(logText: string): ParsedGameLog {
+  const source = detectLogSource(logText);
+
+  if (source === "tcg-masters") {
+    return parseTcgMastersLog(logText, source);
+  }
+
+  return parsePtcgLiveLog(logText, source);
+}
+
+// ─── PTCG Live Parser ────────────────────────────────────────────────
+
+function parsePtcgLiveLog(logText: string, source: LogSource): ParsedGameLog {
   const lines = logText.split("\n").map((l) => l.trim()).filter(Boolean);
 
   const result: ParsedGameLog = {
@@ -50,6 +92,8 @@ export function parseGameLog(logText: string): ParsedGameLog {
     opponentName: null,
     confidence: 0,
     turnCount: 0,
+    source,
+    needsPlayerIdentity: false,
   };
 
   if (lines.length === 0) return result;
@@ -220,6 +264,197 @@ export function parseGameLog(logText: string): ParsedGameLog {
   result.confidence = calculateConfidence(result);
 
   return result;
+}
+
+// ─── TCG Masters Parser ─────────────────────────────────────────────
+
+function parseTcgMastersLog(logText: string, source: LogSource): ParsedGameLog {
+  // TCG Masters logs are bottom-to-top (most recent first), so reverse
+  const lines = logText.split("\n").map((l) => l.trim()).filter(Boolean).reverse();
+
+  const result: ParsedGameLog = {
+    playerCards: [],
+    opponentCards: [],
+    result: null,
+    wentFirst: null,
+    playerName: "P1",
+    opponentName: "P2",
+    confidence: 0,
+    turnCount: 0,
+    source,
+    needsPlayerIdentity: true, // TCG Masters doesn't expose real player names
+  };
+
+  if (lines.length === 0) return result;
+
+  const p1Cards = new Set<string>();
+  const p2Cards = new Set<string>();
+  let turnCount = 0;
+  let firstTurnPlayer: string | null = null;
+
+  // Track prize counts to determine winner
+  let p1Prizes = 0;
+  let p2Prizes = 0;
+
+  for (const line of lines) {
+    // Match "[P1]: action" or "[P2]: action"
+    const playerMatch = /^\[P([12])\]\s*:\s*(.+)$/i.exec(line);
+    if (!playerMatch) continue;
+
+    const player = `P${playerMatch[1]}` as "P1" | "P2";
+    const action = playerMatch[2].trim();
+    const cardSet = player === "P1" ? p1Cards : p2Cards;
+
+    // "started a new turn"
+    if (/started a new turn/i.test(action)) {
+      turnCount++;
+      if (turnCount === 1) firstTurnPlayer = player;
+      continue;
+    }
+
+    // "played X" — card played from hand
+    const playedMatch = /^played\s+(.+)$/i.exec(action);
+    if (playedMatch) {
+      const card = cleanTcgMastersCard(playedMatch[1]);
+      if (card && !isIgnoredToken(card)) cardSet.add(card);
+      continue;
+    }
+
+    // "attached X to Y"
+    const attachedMatch = /^attached\s+(.+?)\s+to\s+(.+)$/i.exec(action);
+    if (attachedMatch) {
+      const card = cleanTcgMastersCard(attachedMatch[1]);
+      if (card && !isIgnoredToken(card)) cardSet.add(card);
+      continue;
+    }
+
+    // "attacked with X"
+    const attackedMatch = /^attacked with\s+(.+)$/i.exec(action);
+    if (attackedMatch) {
+      const card = cleanTcgMastersCard(attackedMatch[1]);
+      if (card && !isIgnoredToken(card)) cardSet.add(card);
+      continue;
+    }
+
+    // "evolved X into Y"
+    const evolvedMatch = /^evolved\s+(.+?)\s+into\s+(.+)$/i.exec(action);
+    if (evolvedMatch) {
+      const fromCard = cleanTcgMastersCard(evolvedMatch[1]);
+      const toCard = cleanTcgMastersCard(evolvedMatch[2]);
+      if (fromCard && !isIgnoredToken(fromCard)) cardSet.add(fromCard);
+      if (toCard && !isIgnoredToken(toCard)) cardSet.add(toCard);
+      continue;
+    }
+
+    // "retreated X. New active: Y"
+    const retreatMatch = /^retreated\s+(.+?)\.\s*New active:\s*(.+)$/i.exec(action);
+    if (retreatMatch) {
+      const retreated = cleanTcgMastersCard(retreatMatch[1]);
+      const newActive = cleanTcgMastersCard(retreatMatch[2]);
+      if (retreated && !isIgnoredToken(retreated)) cardSet.add(retreated);
+      if (newActive && !isIgnoredToken(newActive)) cardSet.add(newActive);
+      continue;
+    }
+
+    // "activated X of Y" — ability activation
+    const activatedMatch = /^activated\s+.+?\s+of\s+(.+)$/i.exec(action);
+    if (activatedMatch) {
+      const card = cleanTcgMastersCard(activatedMatch[1]);
+      if (card && !isIgnoredToken(card)) cardSet.add(card);
+      continue;
+    }
+
+    // "took N prize(s)"
+    const prizeMatch = /^took\s+(\d+)\s+prize/i.exec(action);
+    if (prizeMatch) {
+      const count = parseInt(prizeMatch[1], 10);
+      if (player === "P1") p1Prizes += count;
+      else p2Prizes += count;
+      continue;
+    }
+
+    // "X is KO" — we can extract the KO'd Pokemon (belongs to opponent)
+    const koMatch = /^(.+?)\s+is\s+KO$/i.exec(action);
+    if (koMatch) {
+      const koCard = cleanTcgMastersCard(koMatch[1]);
+      // KO is reported on the player whose pokemon fainted, so the card belongs to that player
+      if (koCard && !isIgnoredToken(koCard)) cardSet.add(koCard);
+      continue;
+    }
+
+    // "discarded X"
+    const discardMatch = /^discarded\s+(.+)$/i.exec(action);
+    if (discardMatch) {
+      const card = cleanTcgMastersCard(discardMatch[1]);
+      if (card && !isIgnoredToken(card)) cardSet.add(card);
+      continue;
+    }
+  }
+
+  // Determine who went first
+  if (firstTurnPlayer) {
+    // Since we don't know which player is the user, store P1/P2 info
+    // wentFirst will be resolved after user identifies themselves
+    result.wentFirst = null; // Can't determine without knowing which player is the user
+  }
+
+  // Determine winner: the player who took 6 prizes, or most prizes if game ended
+  if (p1Prizes >= 6) {
+    // P1 won — but we don't know if P1 is the user, so store as P1 win
+    result.result = null; // Will be determined after user identifies themselves
+  } else if (p2Prizes >= 6) {
+    result.result = null;
+  } else if (p1Prizes > 0 || p2Prizes > 0) {
+    // Game ended without 6 prizes (concede?) — most prizes likely won
+    result.result = null;
+  }
+
+  // Store the winner info in playerName/opponentName temporarily
+  // The API will return both decks and let the UI ask the user which one they played
+  result.turnCount = turnCount;
+  result.playerCards = [...p1Cards]; // P1's cards
+  result.opponentCards = [...p2Cards]; // P2's cards
+  result.confidence = calculateTcgMastersConfidence(result, p1Prizes, p2Prizes);
+
+  // Store prize info for the API to determine the winner
+  // We'll encode the winner in a way the API can use
+  if (p1Prizes >= 6 || p1Prizes > p2Prizes) {
+    // P1 likely won
+    (result as ParsedGameLog & { _winnerPlayer?: string })._winnerPlayer = "P1";
+  } else if (p2Prizes >= 6 || p2Prizes > p1Prizes) {
+    (result as ParsedGameLog & { _winnerPlayer?: string })._winnerPlayer = "P2";
+  }
+
+  return result;
+}
+
+function cleanTcgMastersCard(raw: string): string {
+  return raw
+    .replace(/\s*\(.*?\)\s*/g, "") // Remove parenthetical info like "(from hand)"
+    .replace(/[.!]$/, "")
+    .trim();
+}
+
+function calculateTcgMastersConfidence(parsed: ParsedGameLog, p1Prizes: number, p2Prizes: number): number {
+  let score = 0;
+
+  // Players are always P1/P2 in TCG Masters
+  score += 0.1;
+  // Can determine winner from prizes
+  if (p1Prizes >= 6 || p2Prizes >= 6) score += 0.2;
+  else if (p1Prizes > 0 || p2Prizes > 0) score += 0.1;
+  // Cards detected
+  if (parsed.playerCards.length >= 5) score += 0.2;
+  else if (parsed.playerCards.length >= 3) score += 0.15;
+  else if (parsed.playerCards.length > 0) score += 0.05;
+  if (parsed.opponentCards.length >= 5) score += 0.2;
+  else if (parsed.opponentCards.length >= 3) score += 0.15;
+  else if (parsed.opponentCards.length > 0) score += 0.05;
+  if (parsed.turnCount >= 4) score += 0.05;
+  // Penalty: needs player identity
+  score -= 0.05;
+
+  return Math.min(1, Math.max(0, score));
 }
 
 function detectPlayerNames(lines: string[]): string[] {

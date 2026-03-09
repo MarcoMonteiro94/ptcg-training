@@ -6,8 +6,9 @@ import { getUserMatchLogs, getUserDecks } from "@/server/queries/journal";
 import { getAllArchetypes } from "@/server/queries/archetypes";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Plus, BarChart3 } from "lucide-react";
+import { Plus, BarChart3, Upload } from "lucide-react";
 import { DeckFilter } from "@/components/journal/deck-filter";
+import { QuickLogDialog } from "@/components/journal/quick-log-dialog";
 
 export const metadata: Metadata = {
   title: "Battle Journal",
@@ -31,6 +32,7 @@ export default async function JournalPage({
   let matches: Awaited<ReturnType<typeof getUserMatchLogs>> = [];
   let archetypeNames: Record<string, string> = {};
   let userDecks: Awaited<ReturnType<typeof getUserDecks>> = [];
+  let archetypeList: Array<{ id: string; name: string }> = [];
 
   try {
     [matches, userDecks] = await Promise.all([
@@ -39,6 +41,7 @@ export default async function JournalPage({
     ]);
     const archetypes = await getAllArchetypes();
     archetypeNames = Object.fromEntries(archetypes.map((a) => [a.id, a.name]));
+    archetypeList = archetypes.map((a) => ({ id: a.id, name: a.name }));
   } catch {
     // DB not connected
   }
@@ -65,12 +68,18 @@ export default async function JournalPage({
             </Button>
           </Link>
           <Link href="/journal/new">
+            <Button variant="outline" size="sm" className="border-border/30 text-xs h-8">
+              <Upload className="mr-1.5 h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Import Log</span>
+            </Button>
+          </Link>
+          <QuickLogDialog archetypes={archetypeList}>
             <Button size="sm" className="holo-gradient text-background text-xs h-8 shadow-[0_0_10px_oklch(0.75_0.18_165/0.15)]">
               <Plus className="mr-1 h-3.5 w-3.5" />
               <span className="hidden sm:inline">Log Match</span>
               <span className="sm:hidden">New</span>
             </Button>
-          </Link>
+          </QuickLogDialog>
         </div>
       </div>
 
