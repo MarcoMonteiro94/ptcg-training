@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toggleGoalCompletion } from "@/server/actions/training";
 import { toast } from "sonner";
@@ -45,13 +46,18 @@ const goalIcons: Record<string, typeof Gamepad2> = {
 
 export function DailyGoalsCard({ todayGoals }: DailyGoalsCardProps) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   function handleToggle(goalIndex: number) {
     if (!todayGoals || isPending) return;
 
     startTransition(async () => {
       const result = await toggleGoalCompletion(todayGoals.id, goalIndex);
-      if (result.error) toast.error(result.error);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      router.refresh();
     });
   }
 

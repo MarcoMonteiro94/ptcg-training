@@ -11,6 +11,33 @@ import {
 } from "drizzle-orm/pg-core";
 import { archetypes } from "./game-data";
 
+export const userTournaments = pgTable(
+  "user_tournaments",
+  {
+    id: text("id").primaryKey(),
+    userId: uuid("user_id")
+      .references(() => profiles.id, { onDelete: "cascade" })
+      .notNull(),
+    name: text("name").notNull(),
+    date: date("date").notNull(),
+    format: text("format")
+      .$type<"standard" | "expanded" | "unlimited">()
+      .default("standard")
+      .notNull(),
+    userArchetypeId: text("user_archetype_id").references(() => archetypes.id),
+    totalRounds: integer("total_rounds"),
+    placing: integer("placing"),
+    playerCount: integer("player_count"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("user_tournaments_user_idx").on(table.userId),
+    index("user_tournaments_date_idx").on(table.date),
+  ]
+);
+
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
   displayName: text("display_name"),
@@ -39,6 +66,11 @@ export const matchLogs = pgTable(
     notes: text("notes"),
     tags: jsonb("tags").$type<string[]>().default([]),
     userDecklistId: text("user_decklist_id"),
+    userTournamentId: text("user_tournament_id").references(
+      () => userTournaments.id,
+      { onDelete: "set null" }
+    ),
+    roundNumber: integer("round_number"),
     playedAt: timestamp("played_at", { withTimezone: true }).defaultNow().notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
@@ -47,6 +79,7 @@ export const matchLogs = pgTable(
     index("match_logs_played_at_idx").on(table.playedAt),
     index("match_logs_user_archetype_idx").on(table.userArchetypeId),
     index("match_logs_opponent_archetype_idx").on(table.opponentArchetypeId),
+    index("match_logs_tournament_idx").on(table.userTournamentId),
   ]
 );
 

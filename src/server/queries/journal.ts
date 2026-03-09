@@ -2,14 +2,46 @@ import { db } from "@/server/db";
 import { matchLogs, archetypes } from "@/server/db/schema";
 import { eq, desc, and, sql, count } from "drizzle-orm";
 
-export async function getUserMatchLogs(userId: string, limit = 50, offset = 0) {
-  return db
-    .select()
-    .from(matchLogs)
-    .where(eq(matchLogs.userId, userId))
-    .orderBy(desc(matchLogs.playedAt))
-    .limit(limit)
-    .offset(offset);
+const PAGE_SIZE = 20;
+
+export async function getUserMatchLogs(
+  userId: string,
+  page = 1,
+  deckFilter?: string
+) {
+  const conditions = [
+    eq(matchLogs.userId, userId),
+    // Exclude tournament intentional draws (not real games)
+    sql`NOT (${matchLogs.result} = 'draw' AND ${matchLogs.userTournamentId} IS NOT NULL)`,
+  ];
+  if (deckFilter) {
+    conditions.push(eq(matchLogs.userArchetypeId, deckFilter));
+  }
+
+  const where = and(...conditions);
+  const offset = (page - 1) * PAGE_SIZE;
+
+  const [rows, [countRow]] = await Promise.all([
+    db
+      .select()
+      .from(matchLogs)
+      .where(where)
+      .orderBy(desc(matchLogs.playedAt))
+      .limit(PAGE_SIZE)
+      .offset(offset),
+    db
+      .select({ total: count() })
+      .from(matchLogs)
+      .where(where),
+  ]);
+
+  return {
+    matches: rows,
+    total: Number(countRow.total),
+    page,
+    pageSize: PAGE_SIZE,
+    totalPages: Math.ceil(Number(countRow.total) / PAGE_SIZE),
+  };
 }
 
 export async function getUserDecks(userId: string) {

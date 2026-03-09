@@ -228,7 +228,7 @@ export function ChatInterface({ archetypes = [], initialTopic }: ChatInterfacePr
                         {conv.title || "Untitled conversation"}
                       </p>
                       <p className="text-[11px] font-mono text-muted-foreground/50 mt-0.5">
-                        {new Date(conv.updatedAt).toLocaleDateString()}
+                        {new Date(conv.updatedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
                       </p>
                     </button>
                   ))}

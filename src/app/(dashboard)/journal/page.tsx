@@ -6,7 +6,7 @@ import { getUserMatchLogs, getUserDecks } from "@/server/queries/journal";
 import { getAllArchetypes } from "@/server/queries/archetypes";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Plus, BarChart3, Upload } from "lucide-react";
+import { BarChart3, Upload, ChevronLeft, ChevronRight } from "lucide-react";
 import { DeckFilter } from "@/components/journal/deck-filter";
 import { QuickLogDialog } from "@/components/journal/quick-log-dialog";
 
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default async function JournalPage({
   searchParams,
 }: {
-  searchParams: Promise<{ deck?: string }>;
+  searchParams: Promise<{ deck?: string; page?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -27,16 +27,23 @@ export default async function JournalPage({
 
   if (!user) redirect("/login");
 
-  const { deck: deckFilter } = await searchParams;
+  const { deck: deckFilter, page: pageParam } = await searchParams;
+  const currentPage = Math.max(1, parseInt(pageParam || "1") || 1);
 
-  let matches: Awaited<ReturnType<typeof getUserMatchLogs>> = [];
+  let matchData: Awaited<ReturnType<typeof getUserMatchLogs>> = {
+    matches: [],
+    total: 0,
+    page: 1,
+    pageSize: 20,
+    totalPages: 0,
+  };
   let archetypeNames: Record<string, string> = {};
   let userDecks: Awaited<ReturnType<typeof getUserDecks>> = [];
   let archetypeList: Array<{ id: string; name: string }> = [];
 
   try {
-    [matches, userDecks] = await Promise.all([
-      getUserMatchLogs(user.id),
+    [matchData, userDecks] = await Promise.all([
+      getUserMatchLogs(user.id, currentPage, deckFilter),
       getUserDecks(user.id),
     ]);
     const archetypes = await getAllArchetypes();
@@ -46,10 +53,15 @@ export default async function JournalPage({
     // DB not connected
   }
 
-  // Filter matches client-side since we already have them all
-  const filteredMatches = deckFilter
-    ? matches.filter((m) => m.userArchetypeId === deckFilter)
-    : matches;
+  function buildPageUrl(page: number) {
+    const params = new URLSearchParams();
+    if (deckFilter) params.set("deck", deckFilter);
+    if (page > 1) params.set("page", page.toString());
+    const qs = params.toString();
+    return `/journal${qs ? `?${qs}` : ""}`;
+  }
+
+  const { matches, total, totalPages } = matchData;
 
   return (
     <div className="space-y-6">
@@ -73,13 +85,7 @@ export default async function JournalPage({
               <span className="hidden sm:inline">Import Log</span>
             </Button>
           </Link>
-          <QuickLogDialog archetypes={archetypeList}>
-            <Button size="sm" className="holo-gradient text-background text-xs h-8 shadow-[0_0_10px_oklch(0.75_0.18_165/0.15)]">
-              <Plus className="mr-1 h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Log Match</span>
-              <span className="sm:hidden">New</span>
-            </Button>
-          </QuickLogDialog>
+          <QuickLogDialog archetypes={archetypeList} />
         </div>
       </div>
 
@@ -88,16 +94,62 @@ export default async function JournalPage({
       )}
 
       <div className="rounded-xl border border-border/30 glass-card p-4">
-        <h3 className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">
-          {deckFilter
-            ? `Matches with ${archetypeNames[deckFilter] || "Selected Deck"}`
-            : "Recent Matches"}
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/50">
+            {deckFilter
+              ? `Matches with ${archetypeNames[deckFilter] || "Selected Deck"}`
+              : "Recent Matches"}
+          </h3>
+          {total > 0 && (
+            <span className="text-[10px] font-mono text-muted-foreground/40">
+              {total} match{total !== 1 ? "es" : ""}
+            </span>
+          )}
+        </div>
         <MatchList
-          matches={filteredMatches}
+          matches={matches}
           archetypeNames={archetypeNames}
           archetypes={Object.entries(archetypeNames).map(([id, name]) => ({ id, name }))}
         />
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/20">
+            <Link
+              href={buildPageUrl(currentPage - 1)}
+              className={currentPage <= 1 ? "pointer-events-none" : ""}
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-border/30 text-xs h-8"
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                Prev
+              </Button>
+            </Link>
+
+            <span className="text-xs font-mono text-muted-foreground/60">
+              {currentPage} / {totalPages}
+            </span>
+
+            <Link
+              href={buildPageUrl(currentPage + 1)}
+              className={currentPage >= totalPages ? "pointer-events-none" : ""}
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-border/30 text-xs h-8"
+                disabled={currentPage >= totalPages}
+              >
+                Next
+                <ChevronRight className="h-3.5 w-3.5 ml-1" />
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -88,7 +88,7 @@ export function MatchEditDialog({ match, archetypes, open, onOpenChange }: Match
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-card border-border/30 sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-base">Edit Match</DialogTitle>
         </DialogHeader>

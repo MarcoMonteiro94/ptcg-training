@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Pencil } from "lucide-react";
+import { Pencil, Trophy } from "lucide-react";
 import { MatchEditDialog } from "./match-edit-dialog";
 import { getArchetypeImageUrl } from "@/lib/pokemon-images";
 
@@ -17,6 +18,8 @@ interface MatchLog {
   format: string;
   notes: string | null;
   playedAt: Date;
+  userTournamentId?: string | null;
+  roundNumber?: number | null;
 }
 
 interface MatchListProps {
@@ -116,9 +119,19 @@ export function MatchList({ matches, archetypeNames, archetypes = [] }: MatchLis
                   {match.wentFirst !== null && (
                     <span>{match.wentFirst ? "1st" : "2nd"}</span>
                   )}
-                  <span>{new Date(match.playedAt).toLocaleDateString()}</span>
+                  <span>{new Date(match.playedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}</span>
                 </div>
               </div>
+              {match.userTournamentId && (
+                <Link
+                  href={`/tournaments/${match.userTournamentId}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="shrink-0 text-primary/60 hover:text-primary transition-colors"
+                  title={match.roundNumber ? `Tournament R${match.roundNumber}` : "Tournament"}
+                >
+                  <Trophy className="h-3 w-3" />
+                </Link>
+              )}
               {match.notes && (
                 <div className="text-xs text-muted-foreground/60 max-w-[180px] truncate hidden sm:block">
                   {match.notes}
