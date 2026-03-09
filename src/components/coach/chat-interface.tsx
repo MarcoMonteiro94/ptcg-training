@@ -341,7 +341,7 @@ export function ChatInterface({ archetypes = [], initialTopic }: ChatInterfacePr
               type="submit"
               size="icon"
               disabled={!input.trim()}
-              className="shrink-0 h-10 w-10 holo-gradient text-background disabled:opacity-20 shadow-[0_0_12px_oklch(0.75_0.18_165/0.15)]"
+              className="shrink-0 h-10 w-10 holo-gradient text-background disabled:opacity-50 shadow-[0_0_12px_oklch(0.75_0.18_165/0.15)]"
             >
               <Send className="h-4 w-4" />
             </Button>

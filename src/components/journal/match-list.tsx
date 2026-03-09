@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Pencil, Trophy } from "lucide-react";
 import { MatchEditDialog } from "./match-edit-dialog";
 import { getArchetypeImageUrl } from "@/lib/pokemon-images";
+import { resultConfig } from "@/lib/match-utils";
 
 interface MatchLog {
   id: string;
@@ -27,27 +28,6 @@ interface MatchListProps {
   archetypeNames: Record<string, string>;
   archetypes?: Array<{ id: string; name: string }>;
 }
-
-const resultConfig = {
-  win: {
-    bg: "bg-[oklch(0.72_0.19_155/0.15)]",
-    text: "text-[oklch(0.80_0.15_155)]",
-    border: "border-[oklch(0.72_0.19_155/0.25)]",
-    label: "W",
-  },
-  loss: {
-    bg: "bg-[oklch(0.65_0.22_25/0.15)]",
-    text: "text-[oklch(0.80_0.15_25)]",
-    border: "border-[oklch(0.65_0.22_25/0.25)]",
-    label: "L",
-  },
-  draw: {
-    bg: "bg-[oklch(0.78_0.16_80/0.15)]",
-    text: "text-[oklch(0.85_0.12_80)]",
-    border: "border-[oklch(0.78_0.16_80/0.25)]",
-    label: "D",
-  },
-};
 
 export function MatchList({ matches, archetypeNames, archetypes = [] }: MatchListProps) {
   const [editingMatch, setEditingMatch] = useState<MatchLog | null>(null);

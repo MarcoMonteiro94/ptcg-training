@@ -35,7 +35,7 @@ export default async function NewTournamentPage() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-border/30 glass-card p-4">
+      <div className="rounded-xl border border-border/30 glass-card p-3 sm:p-4">
         <NewTournamentForm archetypes={archetypeList} />
       </div>
     </div>

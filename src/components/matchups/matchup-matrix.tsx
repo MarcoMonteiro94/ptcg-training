@@ -65,20 +65,27 @@ export function MatchupMatrix({ archetypes, matrix }: MatchupMatrixProps) {
                     key={arch.id}
                     className="p-1 text-center font-mono text-[10px] uppercase tracking-wider text-muted-foreground min-w-[52px] max-w-[70px]"
                   >
-                    <div className="flex flex-col items-center gap-0.5">
-                      {imgs.length > 0 && (
-                        <span className="flex -space-x-1 shrink-0">
-                          {imgs.slice(0, 2).map((url, i) => (
-                            <Image key={i} src={url} alt="" width={18} height={18} className="h-[18px] w-[18px] object-contain" unoptimized />
-                          ))}
-                        </span>
-                      )}
-                      <span className="block truncate" title={arch.name}>
-                        {arch.name.length > 8
-                          ? arch.name.slice(0, 7) + "."
-                          : arch.name}
-                      </span>
-                    </div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex flex-col items-center gap-0.5 cursor-default">
+                          {imgs.length > 0 && (
+                            <span className="flex -space-x-1 shrink-0">
+                              {imgs.slice(0, 2).map((url, i) => (
+                                <Image key={i} src={url} alt="" width={18} height={18} className="h-[18px] w-[18px] object-contain" unoptimized />
+                              ))}
+                            </span>
+                          )}
+                          <span className="block truncate">
+                            {arch.name.length > 8
+                              ? arch.name.slice(0, 7) + "."
+                              : arch.name}
+                          </span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-popover border-border">
+                        <p className="text-xs font-medium">{arch.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </th>
                 );
               })}

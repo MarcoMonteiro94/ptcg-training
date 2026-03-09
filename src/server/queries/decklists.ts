@@ -1,5 +1,5 @@
 import { db } from "@/server/db";
-import { decklists, tournamentStandings } from "@/server/db/schema";
+import { decklists, tournamentStandings, userDecklists } from "@/server/db/schema";
 import { eq, desc } from "drizzle-orm";
 
 export async function getDecklistsByArchetype(archetypeId: string, limit = 10) {
@@ -18,6 +18,14 @@ export async function getArchetypePlacements(archetypeId: string) {
     .where(eq(tournamentStandings.archetypeId, archetypeId))
     .orderBy(tournamentStandings.placing)
     .limit(50);
+}
+
+export async function getUserDecklists(userId: string) {
+  return db
+    .select()
+    .from(userDecklists)
+    .where(eq(userDecklists.userId, userId))
+    .orderBy(desc(userDecklists.updatedAt));
 }
 
 export async function getCardUsageForArchetype(archetypeId: string) {

@@ -37,7 +37,6 @@ const FOCUS_AREA_OPTIONS = [
   "Consistency",
   "Speed of Play",
   "Prize Mapping",
-  "Mulligan Decisions",
   "Opening Turns",
   "Late Game Decisions",
 ] as const;

@@ -13,6 +13,7 @@ const createTournamentSchema = z.object({
   date: z.string().min(1, "Date is required"),
   format: z.enum(["standard", "expanded", "unlimited"]),
   userArchetypeId: z.string().optional(),
+  tournamentType: z.enum(["online", "challenge", "cup", "regional", "international", "worlds"]).optional(),
 });
 
 export type CreateTournamentInput = z.infer<typeof createTournamentSchema>;
@@ -20,9 +21,10 @@ export type CreateTournamentInput = z.infer<typeof createTournamentSchema>;
 const updateTournamentSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).optional(),
-  placing: z.number().int().positive().optional(),
+  placing: z.enum(["dropped", "top-1024", "top-512", "top-256", "top-128", "top-64", "top-32", "top-16", "top-8", "top-4", "finalist", "champion"]).optional(),
   notes: z.string().optional(),
   userArchetypeId: z.string().optional(),
+  tournamentType: z.enum(["online", "challenge", "cup", "regional", "international", "worlds"]).optional(),
 });
 
 export type UpdateTournamentInput = z.infer<typeof updateTournamentSchema>;
@@ -65,6 +67,7 @@ export async function createUserTournament(input: CreateTournamentInput) {
     date: data.date,
     format: data.format,
     userArchetypeId: data.userArchetypeId || null,
+    tournamentType: data.tournamentType || "challenge",
   });
 
   revalidatePath("/tournaments");
@@ -100,6 +103,7 @@ export async function updateUserTournament(input: UpdateTournamentInput) {
   if (data.placing !== undefined) updates.placing = data.placing;
   if (data.notes !== undefined) updates.notes = data.notes || null;
   if (data.userArchetypeId !== undefined) updates.userArchetypeId = data.userArchetypeId || null;
+  if (data.tournamentType !== undefined) updates.tournamentType = data.tournamentType;
 
   await db
     .update(userTournaments)
@@ -165,6 +169,83 @@ export async function addTournamentRound(input: AddRoundInput) {
 
   if (!tournament) return { error: "Tournament not found" };
 
+  const values = data.games.map((game) => ({
+    id: randomUUID(),
+    userId: user.id,
+    userArchetypeId: tournament.userArchetypeId,
+    opponentArchetypeId: data.opponentArchetypeId || null,
+    result: game.result,
+    wentFirst: game.wentFirst ?? null,
+    format: tournament.format,
+    notes: null,
+    tags: [],
+    userTournamentId: tournament.id,
+    roundNumber: data.roundNumber,
+  }));
+
+  await db.insert(matchLogs).values(values);
+
+  revalidatePath(`/tournaments/${tournament.id}`);
+  revalidatePath("/tournaments");
+  revalidatePath("/journal");
+
+  return { success: true };
+}
+
+const updateRoundSchema = z.object({
+  tournamentId: z.string().min(1),
+  roundNumber: z.number().int().positive(),
+  opponentArchetypeId: z.string().optional(),
+  games: z
+    .array(
+      z.object({
+        result: z.enum(["win", "loss", "draw"]),
+        wentFirst: z.boolean().optional(),
+      })
+    )
+    .min(1)
+    .max(3),
+});
+
+export type UpdateRoundInput = z.infer<typeof updateRoundSchema>;
+
+export async function updateTournamentRound(input: UpdateRoundInput) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Unauthorized" };
+
+  const parsed = updateRoundSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.message };
+
+  const data = parsed.data;
+
+  const [tournament] = await db
+    .select()
+    .from(userTournaments)
+    .where(
+      and(
+        eq(userTournaments.id, data.tournamentId),
+        eq(userTournaments.userId, user.id)
+      )
+    )
+    .limit(1);
+
+  if (!tournament) return { error: "Tournament not found" };
+
+  // Delete existing games for this round
+  await db
+    .delete(matchLogs)
+    .where(
+      and(
+        eq(matchLogs.userTournamentId, data.tournamentId),
+        eq(matchLogs.roundNumber, data.roundNumber)
+      )
+    );
+
+  // Insert new games
   const values = data.games.map((game) => ({
     id: randomUUID(),
     userId: user.id,

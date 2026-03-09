@@ -25,8 +25,12 @@ export const userTournaments = pgTable(
       .default("standard")
       .notNull(),
     userArchetypeId: text("user_archetype_id").references(() => archetypes.id),
+    tournamentType: text("tournament_type")
+      .$type<"online" | "challenge" | "cup" | "regional" | "international" | "worlds">()
+      .default("challenge"),
     totalRounds: integer("total_rounds"),
-    placing: integer("placing"),
+    placing: text("placing")
+      .$type<"dropped" | "top-1024" | "top-512" | "top-256" | "top-128" | "top-64" | "top-32" | "top-16" | "top-8" | "top-4" | "finalist" | "champion">(),
     playerCount: integer("player_count"),
     notes: text("notes"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -150,7 +154,6 @@ export interface DailyGoalData {
     | "matchup_practice"
     | "study"
     | "review"
-    | "mulligan_practice"
     | "prize_check"
     | "deck_knowledge"
     | "opening_sequence"

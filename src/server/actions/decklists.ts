@@ -54,9 +54,11 @@ export async function saveDeck(input: SaveDeckInput) {
   if (!parsed.success) return { error: parsed.error.message };
 
   const data = parsed.data;
-  const validationErrors = validateDeck(data.cards);
-  if (validationErrors.length > 0) {
-    return { error: validationErrors.join("; ") };
+  if (data.cards.length > 0) {
+    const validationErrors = validateDeck(data.cards);
+    if (validationErrors.length > 0) {
+      return { error: validationErrors.join("; ") };
+    }
   }
 
   if (data.id) {

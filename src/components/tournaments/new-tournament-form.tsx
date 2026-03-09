@@ -13,9 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DeckCombobox } from "@/components/shared/deck-combobox";
 import { createUserTournament } from "@/server/actions/tournaments";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { TOURNAMENT_TYPES } from "@/lib/tournament-utils";
 
 interface NewTournamentFormProps {
   archetypes: Array<{ id: string; name: string }>;
@@ -28,6 +30,7 @@ export function NewTournamentForm({ archetypes }: NewTournamentFormProps) {
   const [name, setName] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [format, setFormat] = useState<"standard" | "expanded" | "unlimited">("standard");
+  const [tournamentType, setTournamentType] = useState<"online" | "challenge" | "cup" | "regional" | "international" | "worlds">("challenge");
   const [userArchetypeId, setUserArchetypeId] = useState("");
 
   function handleSubmit() {
@@ -42,6 +45,7 @@ export function NewTournamentForm({ archetypes }: NewTournamentFormProps) {
         date,
         format,
         userArchetypeId: userArchetypeId || undefined,
+        tournamentType,
       });
 
       if (response.error) {
@@ -62,25 +66,41 @@ export function NewTournamentForm({ archetypes }: NewTournamentFormProps) {
           placeholder="e.g. League Challenge January"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="bg-muted/20 border-border/50 h-9"
+          className="bg-muted/20 border-border/50 h-10 sm:h-9"
         />
       </div>
 
-      <div className="grid gap-3 grid-cols-2">
+      <div className="space-y-1.5">
+        <Label className="text-xs">Date *</Label>
+        <Input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="bg-muted/20 border-border/50 h-10 sm:h-9"
+        />
+      </div>
+
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label className="text-xs">Date *</Label>
-          <Input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="bg-muted/20 border-border/50 h-9"
-          />
+          <Label className="text-xs">Type</Label>
+          <Select value={tournamentType} onValueChange={(v) => setTournamentType(v as typeof tournamentType)}>
+            <SelectTrigger className="bg-muted/20 border-border/50 h-10 sm:h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TOURNAMENT_TYPES.map((t) => (
+                <SelectItem key={t.value} value={t.value}>
+                  {t.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-1.5">
           <Label className="text-xs">Format</Label>
           <Select value={format} onValueChange={(v) => setFormat(v as typeof format)}>
-            <SelectTrigger className="bg-muted/20 border-border/50 h-9">
+            <SelectTrigger className="bg-muted/20 border-border/50 h-10 sm:h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -94,24 +114,18 @@ export function NewTournamentForm({ archetypes }: NewTournamentFormProps) {
 
       <div className="space-y-1.5">
         <Label className="text-xs">Your Deck</Label>
-        <Select value={userArchetypeId} onValueChange={setUserArchetypeId}>
-          <SelectTrigger className="bg-muted/20 border-border/50 h-9">
-            <SelectValue placeholder="Select deck" />
-          </SelectTrigger>
-          <SelectContent>
-            {archetypes.map((a) => (
-              <SelectItem key={a.id} value={a.id}>
-                {a.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <DeckCombobox
+          archetypes={archetypes}
+          value={userArchetypeId}
+          onValueChange={setUserArchetypeId}
+          placeholder="Select deck"
+        />
       </div>
 
       <Button
         onClick={handleSubmit}
         disabled={isPending || !name.trim()}
-        className="w-full holo-gradient text-background text-xs h-9"
+        className="w-full holo-gradient text-background text-xs h-10 sm:h-9"
       >
         {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Create Tournament"}
       </Button>

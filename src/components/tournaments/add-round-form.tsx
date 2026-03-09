@@ -4,13 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { DeckCombobox } from "@/components/shared/deck-combobox";
 import { addTournamentRound } from "@/server/actions/tournaments";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
@@ -115,16 +109,16 @@ export function AddRoundForm({
   }
 
   return (
-    <div className="rounded-lg border border-border/30 bg-card/30 p-3 space-y-3">
+    <div className="rounded-lg border border-border/30 bg-card/30 p-2.5 sm:p-4 space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/50">
           Round {nextRoundNumber}
         </span>
         <button
           onClick={onClose}
-          className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+          className="text-muted-foreground/50 hover:text-muted-foreground transition-colors p-1 -mr-1"
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-4 w-4" />
         </button>
       </div>
 
@@ -133,7 +127,7 @@ export function AddRoundForm({
         <button
           type="button"
           onClick={() => setIsID(false)}
-          className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+          className={`flex-1 rounded-md px-3 py-2 text-xs font-medium transition-colors ${
             !isID
               ? "bg-foreground/10 text-foreground border border-foreground/20"
               : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent"
@@ -144,38 +138,32 @@ export function AddRoundForm({
         <button
           type="button"
           onClick={() => setIsID(true)}
-          className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+          className={`flex-1 rounded-md px-3 py-2 text-xs font-medium transition-colors ${
             isID
               ? "bg-[oklch(0.78_0.16_80/0.2)] text-[oklch(0.85_0.12_80)] border border-[oklch(0.78_0.16_80/0.3)]"
               : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent"
           }`}
         >
-          ID (Intentional Draw)
+          ID
         </button>
       </div>
 
       {!isID && (
         <div className="space-y-1.5">
           <Label className="text-xs">Opponent&apos;s Deck *</Label>
-          <Select value={opponentArchetypeId} onValueChange={setOpponentArchetypeId}>
-            <SelectTrigger className="bg-muted/20 border-border/50 h-9">
-              <SelectValue placeholder="Select deck" />
-            </SelectTrigger>
-            <SelectContent>
-              {archetypes.map((a) => (
-                <SelectItem key={a.id} value={a.id}>
-                  {a.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <DeckCombobox
+            archetypes={archetypes}
+            value={opponentArchetypeId}
+            onValueChange={setOpponentArchetypeId}
+            placeholder="Select deck"
+          />
         </div>
       )}
 
       {isID ? (
-        <div className="rounded-lg bg-[oklch(0.78_0.16_80/0.1)] border border-[oklch(0.78_0.16_80/0.2)] px-3 py-2.5 text-center">
+        <div className="rounded-lg bg-[oklch(0.78_0.16_80/0.1)] border border-[oklch(0.78_0.16_80/0.2)] px-3 py-3 text-center">
           <span className="text-xs text-[oklch(0.85_0.12_80)] font-medium">
-            Intentional Draw — both players agree to draw the round
+            Intentional Draw — both players agree to draw
           </span>
         </div>
       ) : (
@@ -186,54 +174,57 @@ export function AddRoundForm({
               {Array.from({ length: visibleGames }, (_, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 rounded-lg bg-muted/20 border border-border/30 p-2.5"
+                  className="rounded-lg bg-muted/20 border border-border/30 p-2.5"
                 >
-                  <span className="text-xs font-mono text-muted-foreground w-14 shrink-0">
-                    Game {i + 1}
-                  </span>
+                  {/* Game label + coin flip — same line */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-mono text-muted-foreground/60">
+                      Game {i + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => toggleWentFirst(i)}
+                      className={`rounded-md px-2.5 py-1 text-[10px] font-mono transition-colors ${
+                        games[i].wentFirst === true
+                          ? "bg-foreground/10 text-foreground border border-foreground/20"
+                          : games[i].wentFirst === false
+                            ? "bg-foreground/10 text-foreground border border-foreground/20"
+                            : "bg-muted/30 text-muted-foreground/60 hover:bg-muted/50 border border-transparent"
+                      }`}
+                    >
+                      {games[i].wentFirst === null
+                        ? "1st/2nd?"
+                        : games[i].wentFirst
+                          ? "Went 1st"
+                          : "Went 2nd"}
+                    </button>
+                  </div>
 
-                  <div className="flex gap-1.5 flex-1">
+                  {/* W/L buttons — full width, large touch targets */}
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => toggleResult(i, "win")}
-                      className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                      className={`rounded-md py-2.5 text-sm font-bold transition-colors ${
                         games[i].result === "win"
                           ? "bg-[oklch(0.72_0.19_155/0.2)] text-[oklch(0.80_0.15_155)] border border-[oklch(0.72_0.19_155/0.3)]"
-                          : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent"
+                          : "bg-muted/30 text-muted-foreground/60 hover:bg-muted/50 border border-transparent"
                       }`}
                     >
-                      W
+                      WIN
                     </button>
                     <button
                       type="button"
                       onClick={() => toggleResult(i, "loss")}
-                      className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                      className={`rounded-md py-2.5 text-sm font-bold transition-colors ${
                         games[i].result === "loss"
                           ? "bg-[oklch(0.65_0.22_25/0.2)] text-[oklch(0.80_0.15_25)] border border-[oklch(0.65_0.22_25/0.3)]"
-                          : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent"
+                          : "bg-muted/30 text-muted-foreground/60 hover:bg-muted/50 border border-transparent"
                       }`}
                     >
-                      L
+                      LOSS
                     </button>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => toggleWentFirst(i)}
-                    className={`rounded-md px-2 py-1.5 text-[10px] font-mono transition-colors shrink-0 ${
-                      games[i].wentFirst === true
-                        ? "bg-foreground/10 text-foreground border border-foreground/20"
-                        : games[i].wentFirst === false
-                          ? "bg-foreground/10 text-foreground border border-foreground/20"
-                          : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent"
-                    }`}
-                  >
-                    {games[i].wentFirst === null
-                      ? "1st?"
-                      : games[i].wentFirst
-                        ? "1st"
-                        : "2nd"}
-                  </button>
                 </div>
               ))}
             </div>
@@ -241,17 +232,17 @@ export function AddRoundForm({
 
           {completedGames.length > 0 && (
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-muted-foreground">Set score:</span>
+              <span className="text-muted-foreground">Set:</span>
               <span className="font-mono font-medium">
                 <span className="text-[oklch(0.80_0.15_155)]">{winsCount}</span>
-                <span className="text-muted-foreground mx-1">-</span>
+                <span className="text-muted-foreground/40 mx-0.5">-</span>
                 <span className="text-[oklch(0.80_0.15_25)]">{lossCount}</span>
               </span>
               {isSetDecided && (
                 <span
                   className={`font-medium ${winsCount > lossCount ? "text-[oklch(0.80_0.15_155)]" : "text-[oklch(0.80_0.15_25)]"}`}
                 >
-                  ({winsCount > lossCount ? "Won" : "Lost"} set)
+                  ({winsCount > lossCount ? "Won" : "Lost"})
                 </span>
               )}
             </div>
@@ -262,7 +253,7 @@ export function AddRoundForm({
       <Button
         onClick={handleSubmit}
         disabled={isPending || !canSubmit}
-        className="w-full holo-gradient text-background text-xs h-9"
+        className="w-full holo-gradient text-background text-xs h-10 sm:h-9"
       >
         {isPending ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />

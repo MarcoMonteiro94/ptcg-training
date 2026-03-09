@@ -3,10 +3,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { getMetaStats } from "@/server/queries/meta";
+import { getAllArchetypes } from "@/server/queries/archetypes";
+import { getUserDecklists } from "@/server/queries/decklists";
+import { createClient } from "@/lib/supabase/server";
 import { Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ArchetypeTier } from "@/types";
 import { getArchetypeImages } from "@/lib/pokemon-images";
+import { MyDecksSection } from "@/components/decks/my-decks-section";
 
 export const metadata: Metadata = {
   title: "Deck Explorer",
@@ -45,10 +49,26 @@ const tierConfig: Record<ArchetypeTier, { bg: string; text: string; border: stri
 
 export default async function DecksPage() {
   const format = "standard" as const;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   let archetypes: Awaited<ReturnType<typeof getMetaStats>> = [];
+  let archetypeList: Array<{ id: string; name: string }> = [];
+  let userDecks: Awaited<ReturnType<typeof getUserDecklists>> = [];
+
   try {
-    archetypes = await getMetaStats(format);
+    const [metaStats, allArchetypes] = await Promise.all([
+      getMetaStats(format),
+      getAllArchetypes(),
+    ]);
+    archetypes = metaStats;
+    archetypeList = allArchetypes.map((a) => ({ id: a.id, name: a.name }));
+
+    if (user) {
+      userDecks = await getUserDecklists(user.id);
+    }
   } catch {
     // DB not connected
   }
@@ -61,6 +81,10 @@ export default async function DecksPage() {
           Browse meta archetypes, sample lists, and card usage data
         </p>
       </div>
+
+      {user && archetypeList.length > 0 && (
+        <MyDecksSection decklists={userDecks} archetypes={archetypeList} />
+      )}
 
       {archetypes.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-border/30 glass-card">

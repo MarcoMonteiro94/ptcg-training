@@ -56,7 +56,7 @@ export default async function TournamentsPage() {
         </Link>
       </div>
 
-      <div className="rounded-xl border border-border/30 glass-card p-4">
+      <div className="rounded-xl border border-border/30 glass-card p-3 sm:p-4">
         <h3 className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">
           Tournament History
         </h3>

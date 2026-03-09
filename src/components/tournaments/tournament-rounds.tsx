@@ -10,7 +10,9 @@ import { deleteTournamentRound } from "@/server/actions/tournaments";
 import { toast } from "sonner";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { getArchetypeImageUrl } from "@/lib/pokemon-images";
+import { resultConfig } from "@/lib/match-utils";
 import { AddRoundForm } from "./add-round-form";
+import { EditRoundDialog } from "./edit-round-dialog";
 
 interface Round {
   id: string;
@@ -32,27 +34,6 @@ interface TournamentRoundsProps {
   archetypeNames: Record<string, string>;
 }
 
-const resultConfig = {
-  win: {
-    bg: "bg-[oklch(0.72_0.19_155/0.15)]",
-    text: "text-[oklch(0.80_0.15_155)]",
-    border: "border-[oklch(0.72_0.19_155/0.25)]",
-    label: "W",
-  },
-  loss: {
-    bg: "bg-[oklch(0.65_0.22_25/0.15)]",
-    text: "text-[oklch(0.80_0.15_25)]",
-    border: "border-[oklch(0.65_0.22_25/0.25)]",
-    label: "L",
-  },
-  draw: {
-    bg: "bg-[oklch(0.78_0.16_80/0.15)]",
-    text: "text-[oklch(0.85_0.12_80)]",
-    border: "border-[oklch(0.78_0.16_80/0.25)]",
-    label: "D",
-  },
-};
-
 export function TournamentRounds({
   tournament,
   archetypes,
@@ -60,6 +41,7 @@ export function TournamentRounds({
 }: TournamentRoundsProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [deletingRound, setDeletingRound] = useState<number | null>(null);
+  const [editingRound, setEditingRound] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -77,7 +59,8 @@ export function TournamentRounds({
       ? sortedRoundNumbers[sortedRoundNumbers.length - 1] + 1
       : 1;
 
-  function handleDeleteRound(roundNumber: number) {
+  function handleDeleteRound(e: React.MouseEvent, roundNumber: number) {
+    e.stopPropagation();
     if (!confirm(`Delete Round ${roundNumber}? This will remove all games from this round.`))
       return;
 
@@ -96,7 +79,7 @@ export function TournamentRounds({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {sortedRoundNumbers.length === 0 && !showAddForm && (
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <p className="text-muted-foreground text-sm">No rounds logged yet.</p>
@@ -123,16 +106,18 @@ export function TournamentRounds({
           roundWins > roundLosses ? "win" : roundLosses > roundWins ? "loss" : "draw";
 
         return (
-          <div
+          <button
             key={roundNumber}
+            type="button"
+            onClick={() => setEditingRound(roundNumber)}
             className={cn(
-              "group flex items-center gap-3 rounded-lg border px-3 py-2.5",
+              "group flex items-center gap-2 rounded-lg border px-2.5 py-2.5 sm:px-3 sm:gap-2.5 w-full text-left transition-colors hover:bg-muted/15 active:bg-muted/25",
               resultConfig[roundResult].border,
               "bg-card/30"
             )}
           >
-            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/50 w-6 shrink-0">
-              R{roundNumber}
+            <span className="text-[10px] font-mono text-muted-foreground/50 shrink-0">
+              {roundNumber}
             </span>
 
             {/* Game results or ID badge */}
@@ -147,7 +132,7 @@ export function TournamentRounds({
                 ID
               </Badge>
             ) : (
-              <div className="flex gap-1 shrink-0">
+              <div className="flex gap-0.5 shrink-0">
                 {games.map((game) => {
                   const cfg =
                     resultConfig[game.result as keyof typeof resultConfig] ||
@@ -180,33 +165,51 @@ export function TournamentRounds({
             )}
 
             <div className="flex-1 min-w-0">
-              <span className="text-sm font-medium truncate block">
-                vs {oppName}
+              <span className="text-xs sm:text-sm truncate block">
+                {oppName}
               </span>
             </div>
 
             {!isIntentionalDraw && (
               <div className="font-mono text-xs font-medium shrink-0">
                 <span className="text-[oklch(0.80_0.15_155)]">{roundWins}</span>
-                <span className="text-muted-foreground/50">-</span>
+                <span className="text-muted-foreground/40">-</span>
                 <span className="text-[oklch(0.80_0.15_25)]">{roundLosses}</span>
               </div>
             )}
 
-            <button
-              onClick={() => handleDeleteRound(roundNumber)}
-              disabled={isPending}
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/30 hover:text-destructive shrink-0"
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={(e) => handleDeleteRound(e, roundNumber)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleDeleteRound(e as unknown as React.MouseEvent, roundNumber); }}
+              className="text-muted-foreground/30 hover:text-destructive active:text-destructive transition-colors shrink-0 p-1 -mr-1"
             >
               {deletingRound === roundNumber ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Trash2 className="h-3 w-3" />
+                <Trash2 className="h-3.5 w-3.5" />
               )}
-            </button>
-          </div>
+            </div>
+          </button>
         );
       })}
+
+      {/* Edit round dialog */}
+      {editingRound !== null && roundGroups.has(editingRound) && (
+        <EditRoundDialog
+          tournamentId={tournament.id}
+          roundNumber={editingRound}
+          opponentArchetypeId={roundGroups.get(editingRound)![0].opponentArchetypeId}
+          games={roundGroups.get(editingRound)!.map((g) => ({
+            result: g.result,
+            wentFirst: g.wentFirst,
+          }))}
+          archetypes={archetypes}
+          open={true}
+          onOpenChange={(open) => { if (!open) setEditingRound(null); }}
+        />
+      )}
 
       {showAddForm ? (
         <AddRoundForm
@@ -219,7 +222,7 @@ export function TournamentRounds({
         <Button
           variant="outline"
           size="sm"
-          className="w-full border-dashed border-border/30 text-xs h-9 text-muted-foreground"
+          className="w-full border-dashed border-border/30 text-xs h-10 sm:h-9 text-muted-foreground"
           onClick={() => setShowAddForm(true)}
         >
           <Plus className="mr-1.5 h-3.5 w-3.5" />

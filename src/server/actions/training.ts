@@ -113,7 +113,6 @@ export async function createTrainingPlan(input: z.infer<typeof createPlanSchema>
 
     // Rotate advanced goal types throughout the week
     const advancedGoals: DailyGoalData[] = [
-      { type: "mulligan_practice", description: "Practice 5 mulligan decisions — track what you kept and why", completed: false },
       { type: "prize_check", description: "Map your prize cards in 3 games before making key plays", completed: false },
       { type: "deck_knowledge", description: "Review your decklist and identify tech card options", completed: false },
       { type: "opening_sequence", description: "Practice your ideal T1 setup sequence 3 times", completed: false },

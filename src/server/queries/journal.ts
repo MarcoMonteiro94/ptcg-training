@@ -2,13 +2,20 @@ import { db } from "@/server/db";
 import { matchLogs, archetypes } from "@/server/db/schema";
 import { eq, desc, and, sql, count } from "drizzle-orm";
 
-const PAGE_SIZE = 20;
+const VALID_PAGE_SIZES = [10, 20, 50] as const;
+
+function clampPageSize(size: number): number {
+  return (VALID_PAGE_SIZES as readonly number[]).includes(size) ? size : 20;
+}
 
 export async function getUserMatchLogs(
   userId: string,
   page = 1,
-  deckFilter?: string
+  deckFilter?: string,
+  pageSize = 20,
+  matchType?: string
 ) {
+  const PAGE_SIZE = clampPageSize(pageSize);
   const conditions = [
     eq(matchLogs.userId, userId),
     // Exclude tournament intentional draws (not real games)
@@ -16,6 +23,11 @@ export async function getUserMatchLogs(
   ];
   if (deckFilter) {
     conditions.push(eq(matchLogs.userArchetypeId, deckFilter));
+  }
+  if (matchType === "tournament") {
+    conditions.push(sql`${matchLogs.userTournamentId} IS NOT NULL`);
+  } else if (matchType === "online") {
+    conditions.push(sql`${matchLogs.userTournamentId} IS NULL`);
   }
 
   const where = and(...conditions);

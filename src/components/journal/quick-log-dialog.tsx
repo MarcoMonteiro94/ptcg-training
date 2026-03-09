@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DeckCombobox } from "@/components/shared/deck-combobox";
 import { createMatchLog } from "@/server/actions/journal";
 import { toast } from "sonner";
 import { Plus, Loader2 } from "lucide-react";
@@ -98,34 +99,22 @@ export function QuickLogDialog({ archetypes }: QuickLogDialogProps) {
             <div className="grid gap-3 grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="text-xs">Your Deck</Label>
-                <Select value={userArchetypeId} onValueChange={setUserArchetypeId}>
-                  <SelectTrigger className="bg-muted/20 border-border/50 h-9">
-                    <SelectValue placeholder="Select deck" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {archetypes.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>
-                        {a.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <DeckCombobox
+                  archetypes={archetypes}
+                  value={userArchetypeId}
+                  onValueChange={setUserArchetypeId}
+                  placeholder="Select deck"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs">Opponent&apos;s Deck *</Label>
-                <Select value={opponentArchetypeId} onValueChange={setOpponentArchetypeId}>
-                  <SelectTrigger className="bg-muted/20 border-border/50 h-9">
-                    <SelectValue placeholder="Select deck" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {archetypes.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>
-                        {a.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <DeckCombobox
+                  archetypes={archetypes}
+                  value={opponentArchetypeId}
+                  onValueChange={setOpponentArchetypeId}
+                  placeholder="Select deck"
+                />
               </div>
             </div>
 

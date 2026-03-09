@@ -6,9 +6,12 @@ import { getUserMatchLogs, getUserDecks } from "@/server/queries/journal";
 import { getAllArchetypes } from "@/server/queries/archetypes";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { BarChart3, Upload, ChevronLeft, ChevronRight } from "lucide-react";
 import { DeckFilter } from "@/components/journal/deck-filter";
+import { MatchTypeFilter, type MatchTypeFilter as MatchTypeFilterValue } from "@/components/journal/match-type-filter";
 import { QuickLogDialog } from "@/components/journal/quick-log-dialog";
+import { PageSizeSelector } from "@/components/journal/page-size-selector";
 
 export const metadata: Metadata = {
   title: "Battle Journal",
@@ -18,7 +21,7 @@ export const metadata: Metadata = {
 export default async function JournalPage({
   searchParams,
 }: {
-  searchParams: Promise<{ deck?: string; page?: string }>;
+  searchParams: Promise<{ deck?: string; page?: string; type?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -27,14 +30,18 @@ export default async function JournalPage({
 
   if (!user) redirect("/login");
 
-  const { deck: deckFilter, page: pageParam } = await searchParams;
+  const { deck: deckFilter, page: pageParam, type: typeParam } = await searchParams;
   const currentPage = Math.max(1, parseInt(pageParam || "1") || 1);
+  const cookieStore = await cookies();
+  const sizeCookie = Number(cookieStore.get("journal-page-size")?.value);
+  const pageSize = [10, 20, 50].includes(sizeCookie) ? sizeCookie : 20;
+  const matchType: MatchTypeFilterValue = ["tournament", "online"].includes(typeParam || "") ? (typeParam as MatchTypeFilterValue) : "all";
 
   let matchData: Awaited<ReturnType<typeof getUserMatchLogs>> = {
     matches: [],
     total: 0,
     page: 1,
-    pageSize: 20,
+    pageSize,
     totalPages: 0,
   };
   let archetypeNames: Record<string, string> = {};
@@ -43,7 +50,7 @@ export default async function JournalPage({
 
   try {
     [matchData, userDecks] = await Promise.all([
-      getUserMatchLogs(user.id, currentPage, deckFilter),
+      getUserMatchLogs(user.id, currentPage, deckFilter, pageSize, matchType === "all" ? undefined : matchType),
       getUserDecks(user.id),
     ]);
     const archetypes = await getAllArchetypes();
@@ -56,6 +63,7 @@ export default async function JournalPage({
   function buildPageUrl(page: number) {
     const params = new URLSearchParams();
     if (deckFilter) params.set("deck", deckFilter);
+    if (matchType !== "all") params.set("type", matchType);
     if (page > 1) params.set("page", page.toString());
     const qs = params.toString();
     return `/journal${qs ? `?${qs}` : ""}`;
@@ -89,9 +97,12 @@ export default async function JournalPage({
         </div>
       </div>
 
-      {userDecks.length > 0 && (
-        <DeckFilter decks={userDecks} activeDeckId={deckFilter || null} />
-      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <MatchTypeFilter active={matchType} />
+        {userDecks.length > 0 && (
+          <DeckFilter decks={userDecks} activeDeckId={deckFilter || null} />
+        )}
+      </div>
 
       <div className="rounded-xl border border-border/30 glass-card p-4">
         <div className="flex items-center justify-between mb-3">
@@ -112,42 +123,55 @@ export default async function JournalPage({
           archetypes={Object.entries(archetypeNames).map(([id, name]) => ({ id, name }))}
         />
 
-        {/* Pagination */}
-        {totalPages > 1 && (
+        {/* Pagination & page size */}
+        {total > 0 && (
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/20">
-            <Link
-              href={buildPageUrl(currentPage - 1)}
-              className={currentPage <= 1 ? "pointer-events-none" : ""}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-border/30 text-xs h-8"
-                disabled={currentPage <= 1}
+            {totalPages > 1 ? (
+              <Link
+                href={buildPageUrl(currentPage - 1)}
+                className={currentPage <= 1 ? "pointer-events-none" : ""}
               >
-                <ChevronLeft className="h-3.5 w-3.5 mr-1" />
-                Prev
-              </Button>
-            </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-border/30 text-xs h-8"
+                  disabled={currentPage <= 1}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                  Prev
+                </Button>
+              </Link>
+            ) : (
+              <div />
+            )}
 
-            <span className="text-xs font-mono text-muted-foreground/60">
-              {currentPage} / {totalPages}
-            </span>
+            <div className="flex items-center gap-2">
+              <PageSizeSelector currentSize={pageSize} />
+              {totalPages > 1 && (
+                <span className="text-xs font-mono text-muted-foreground/60">
+                  {currentPage} / {totalPages}
+                </span>
+              )}
+            </div>
 
-            <Link
-              href={buildPageUrl(currentPage + 1)}
-              className={currentPage >= totalPages ? "pointer-events-none" : ""}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-border/30 text-xs h-8"
-                disabled={currentPage >= totalPages}
+            {totalPages > 1 ? (
+              <Link
+                href={buildPageUrl(currentPage + 1)}
+                className={currentPage >= totalPages ? "pointer-events-none" : ""}
               >
-                Next
-                <ChevronRight className="h-3.5 w-3.5 ml-1" />
-              </Button>
-            </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-border/30 text-xs h-8"
+                  disabled={currentPage >= totalPages}
+                >
+                  Next
+                  <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                </Button>
+              </Link>
+            ) : (
+              <div />
+            )}
           </div>
         )}
       </div>
