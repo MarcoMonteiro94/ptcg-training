@@ -35,7 +35,8 @@ export default async function JournalPage({
   const cookieStore = await cookies();
   const sizeCookie = Number(cookieStore.get("journal-page-size")?.value);
   const pageSize = [10, 20, 50].includes(sizeCookie) ? sizeCookie : 20;
-  const matchType: MatchTypeFilterValue = ["tournament", "online"].includes(typeParam || "") ? (typeParam as MatchTypeFilterValue) : "all";
+  const validTypes = ["tournament", "tcg-masters", "tcg-live", "physical"];
+  const matchType: MatchTypeFilterValue = validTypes.includes(typeParam || "") ? (typeParam as MatchTypeFilterValue) : "all";
 
   let matchData: Awaited<ReturnType<typeof getUserMatchLogs>> = {
     matches: [],
@@ -81,7 +82,7 @@ export default async function JournalPage({
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
-          <Link href={deckFilter ? `/journal/stats?deck=${deckFilter}` : "/journal/stats"}>
+          <Link href={deckFilter ? `/stats?deck=${deckFilter}` : "/stats"}>
             <Button variant="outline" size="sm" className="border-border/30 text-xs h-8">
               <BarChart3 className="mr-1.5 h-3.5 w-3.5" />
               <span className="hidden sm:inline">Stats</span>

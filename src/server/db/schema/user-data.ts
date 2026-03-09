@@ -70,6 +70,7 @@ export const matchLogs = pgTable(
     notes: text("notes"),
     tags: jsonb("tags").$type<string[]>().default([]),
     userDecklistId: text("user_decklist_id"),
+    platform: text("platform").$type<"tcg-masters" | "tcg-live" | "physical">(),
     userTournamentId: text("user_tournament_id").references(
       () => userTournaments.id,
       { onDelete: "set null" }

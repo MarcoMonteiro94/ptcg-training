@@ -18,6 +18,8 @@ import { PlanCompletionModal } from "@/components/training/plan-completion-modal
 import { TrainingWinRateChart } from "@/components/training/training-win-rate-chart";
 import { RecalibrateButton } from "@/components/training/recalibrate-button";
 import { TrainingEmptyState } from "@/components/training/empty-states";
+import { QuickLogDialog } from "@/components/journal/quick-log-dialog";
+import { getAllArchetypes } from "@/server/queries/archetypes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Target, Sparkles, History } from "lucide-react";
@@ -48,6 +50,7 @@ export default async function TrainingPage() {
   let matchupImprovements: Awaited<ReturnType<typeof getMatchupImprovement>> = [];
   let completable = false;
   let periodStats: Awaited<ReturnType<typeof getTrainingPeriodStats>> = [];
+  let archetypeList: Array<{ id: string; name: string }> = [];
 
   try {
     [progress, todayGoals, streak, matchupImprovements, completable, periodStats] = await Promise.all([
@@ -63,6 +66,8 @@ export default async function TrainingPage() {
       isPlanCompletable(user.id, plan.id),
       getTrainingPeriodStats(user.id, plan.id),
     ]);
+    const archetypes = await getAllArchetypes();
+    archetypeList = archetypes.map((a) => ({ id: a.id, name: a.name }));
   } catch {
     // DB not connected
   }
@@ -111,11 +116,7 @@ export default async function TrainingPage() {
               <History className="h-4 w-4" />
             </Button>
           </Link>
-          <Link href="/journal/new">
-            <Button variant="outline" size="sm">
-              Quick Log
-            </Button>
-          </Link>
+          <QuickLogDialog archetypes={archetypeList} />
           <AbandonPlanDialog
             planId={plan.id}
             completionRate={progress?.completionRate ?? 0}

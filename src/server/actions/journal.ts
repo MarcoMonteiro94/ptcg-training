@@ -16,6 +16,7 @@ const createMatchLogSchema = z.object({
   format: z.enum(["standard", "expanded", "unlimited"]),
   notes: z.string().optional(),
   tags: z.array(z.string()).optional(),
+  platform: z.enum(["tcg-masters", "tcg-live", "physical"]).optional(),
 });
 
 export type CreateMatchLogInput = z.infer<typeof createMatchLogSchema>;
@@ -27,6 +28,7 @@ const updateMatchLogSchema = z.object({
   result: z.enum(["win", "loss", "draw"]),
   wentFirst: z.boolean().optional(),
   notes: z.string().optional(),
+  platform: z.enum(["tcg-masters", "tcg-live", "physical"]).optional().nullable(),
 });
 
 export type UpdateMatchLogInput = z.infer<typeof updateMatchLogSchema>;
@@ -58,6 +60,7 @@ export async function createMatchLog(input: CreateMatchLogInput) {
     format: data.format,
     notes: data.notes || null,
     tags: data.tags || [],
+    platform: data.platform || null,
   });
 
   // Auto-complete training goals
@@ -68,7 +71,7 @@ export async function createMatchLog(input: CreateMatchLogInput) {
   }
 
   revalidatePath("/journal");
-  revalidatePath("/journal/stats");
+  revalidatePath("/stats");
   revalidatePath("/training");
 
   return { success: true };
@@ -105,6 +108,7 @@ export async function createMatchLogBatch(inputs: CreateMatchLogInput[]) {
     format: input.format,
     notes: input.notes || null,
     tags: input.tags || [],
+    platform: input.platform || null,
   }));
 
   await db.insert(matchLogs).values(values);
@@ -117,7 +121,7 @@ export async function createMatchLogBatch(inputs: CreateMatchLogInput[]) {
   }
 
   revalidatePath("/journal");
-  revalidatePath("/journal/stats");
+  revalidatePath("/stats");
   revalidatePath("/training");
 
   return { success: true };
@@ -159,11 +163,12 @@ export async function updateMatchLog(input: UpdateMatchLogInput) {
       result: data.result,
       wentFirst: data.wentFirst ?? null,
       notes: data.notes || null,
+      platform: data.platform ?? undefined,
     })
     .where(eq(matchLogs.id, data.id));
 
   revalidatePath("/journal");
-  revalidatePath("/journal/stats");
+  revalidatePath("/stats");
 
   return { success: true };
 }
@@ -192,7 +197,7 @@ export async function deleteMatchLog(id: string) {
   await db.delete(matchLogs).where(eq(matchLogs.id, id));
 
   revalidatePath("/journal");
-  revalidatePath("/journal/stats");
+  revalidatePath("/stats");
 
   return { success: true };
 }

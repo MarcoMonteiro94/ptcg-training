@@ -12,7 +12,9 @@ import {
 const MATCH_TYPES = [
   { value: "all", label: "All Matches" },
   { value: "tournament", label: "Tournament" },
-  { value: "online", label: "Online / Casual" },
+  { value: "tcg-masters", label: "TCG Masters" },
+  { value: "tcg-live", label: "TCG Live" },
+  { value: "physical", label: "Physical" },
 ] as const;
 
 export type MatchTypeFilter = (typeof MATCH_TYPES)[number]["value"];

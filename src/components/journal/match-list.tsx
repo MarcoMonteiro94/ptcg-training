@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Pencil, Trophy } from "lucide-react";
+import { Pencil, Trophy, ExternalLink } from "lucide-react";
 import { MatchEditDialog } from "./match-edit-dialog";
 import { getArchetypeImageUrl } from "@/lib/pokemon-images";
 import { resultConfig } from "@/lib/match-utils";
@@ -21,7 +21,14 @@ interface MatchLog {
   playedAt: Date;
   userTournamentId?: string | null;
   roundNumber?: number | null;
+  platform?: string | null;
 }
+
+const platformLabels: Record<string, string> = {
+  "tcg-masters": "Masters",
+  "tcg-live": "Live",
+  "physical": "IRL",
+};
 
 interface MatchListProps {
   matches: MatchLog[];
@@ -112,6 +119,26 @@ export function MatchList({ matches, archetypeNames, archetypes = [] }: MatchLis
                   <Trophy className="h-3 w-3" />
                 </Link>
               )}
+              {match.platform && platformLabels[match.platform] && (
+                <span className="shrink-0 text-[10px] font-mono text-muted-foreground/50 bg-muted/30 px-1.5 py-0.5 rounded hidden sm:inline">
+                  {platformLabels[match.platform]}
+                </span>
+              )}
+              {(() => {
+                const reviewMatch = match.notes?.match(/Review:\s*(https?:\/\/\S+)/);
+                return reviewMatch ? (
+                  <a
+                    href={reviewMatch[1]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="shrink-0 text-primary/60 hover:text-primary transition-colors"
+                    title="View game review"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                ) : null;
+              })()}
               {match.notes && (
                 <div className="text-xs text-muted-foreground/60 max-w-[180px] truncate hidden sm:block">
                   {match.notes}

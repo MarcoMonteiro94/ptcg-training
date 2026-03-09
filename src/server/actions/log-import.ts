@@ -14,6 +14,7 @@ const submitParsedLogSchema = z.object({
   wentFirst: z.boolean().optional(),
   format: z.enum(["standard", "expanded", "unlimited"]),
   notes: z.string().optional(),
+  platform: z.enum(["tcg-masters", "tcg-live", "physical"]).optional(),
 });
 
 export type SubmitParsedLogInput = z.infer<typeof submitParsedLogSchema>;
@@ -45,10 +46,11 @@ export async function submitParsedLog(input: SubmitParsedLogInput) {
     format: data.format,
     notes: data.notes || null,
     tags: ["game-log-import"],
+    platform: data.platform ?? null,
   });
 
   revalidatePath("/journal");
-  revalidatePath("/journal/stats");
+  revalidatePath("/stats");
 
   return { success: true };
 }

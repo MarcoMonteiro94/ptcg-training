@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { deleteDeck } from "@/server/actions/decklists";
@@ -73,25 +74,30 @@ export function MyDecksSection({ decklists, archetypes }: MyDecksSectionProps) {
                   "group flex items-center gap-2.5 rounded-lg border border-border/30 bg-card/30 px-3 py-2.5 transition-colors hover:bg-muted/20"
                 )}
               >
-                {deckImg ? (
-                  <Image
-                    src={deckImg}
-                    alt=""
-                    width={28}
-                    height={28}
-                    className="h-7 w-7 object-contain shrink-0"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="h-7 w-7 rounded-full bg-muted/50 shrink-0" />
-                )}
+                <Link
+                  href={`/decks/my/${deck.id}`}
+                  className="flex items-center gap-2.5 flex-1 min-w-0"
+                >
+                  {deckImg ? (
+                    <Image
+                      src={deckImg}
+                      alt=""
+                      width={28}
+                      height={28}
+                      className="h-7 w-7 object-contain shrink-0"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="h-7 w-7 rounded-full bg-muted/50 shrink-0" />
+                  )}
 
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium truncate block">{deck.name}</span>
-                  <span className="text-[10px] font-mono text-muted-foreground/50 capitalize">
-                    {deck.format}
-                  </span>
-                </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium truncate block">{deck.name}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground/50 capitalize">
+                      {deck.format}
+                    </span>
+                  </div>
+                </Link>
 
                 {deck.isActive && (
                   <Badge className="text-[9px] px-1.5 py-0 bg-primary/10 text-primary border-0 shrink-0">

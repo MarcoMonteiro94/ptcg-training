@@ -82,7 +82,7 @@ export async function saveDeck(input: SaveDeckInput) {
       })
       .where(eq(userDecklists.id, data.id));
 
-    revalidatePath("/decks/builder");
+    revalidatePath("/decks");
     return { success: true, id: data.id };
   }
 
@@ -97,7 +97,7 @@ export async function saveDeck(input: SaveDeckInput) {
     cards: data.cards,
   });
 
-  revalidatePath("/decks/builder");
+  revalidatePath("/decks");
   return { success: true, id };
 }
 
@@ -128,6 +128,6 @@ export async function deleteDeck(deckId: string) {
     .delete(userDecklists)
     .where(and(eq(userDecklists.id, deckId), eq(userDecklists.userId, user.id)));
 
-  revalidatePath("/decks/builder");
+  revalidatePath("/decks");
   return { success: true };
 }

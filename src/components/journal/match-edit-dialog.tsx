@@ -30,6 +30,7 @@ interface MatchEditDialogProps {
     userArchetypeId: string | null;
     wentFirst: boolean | null;
     notes: string | null;
+    platform?: string | null;
   };
   archetypes: Array<{ id: string; name: string }>;
   open: boolean;
@@ -45,6 +46,7 @@ export function MatchEditDialog({ match, archetypes, open, onOpenChange }: Match
     match.wentFirst === null ? "" : match.wentFirst ? "true" : "false"
   );
   const [notes, setNotes] = useState(match.notes || "");
+  const [platform, setPlatform] = useState<string>(match.platform || "");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   function handleSave() {
@@ -61,6 +63,7 @@ export function MatchEditDialog({ match, archetypes, open, onOpenChange }: Match
         result,
         wentFirst: wentFirst === "" ? undefined : wentFirst === "true",
         notes: notes || undefined,
+        platform: platform ? (platform as "tcg-masters" | "tcg-live" | "physical") : null,
       });
 
       if (response.error) {
@@ -117,7 +120,7 @@ export function MatchEditDialog({ match, archetypes, open, onOpenChange }: Match
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Result *</Label>
               <Select value={result} onValueChange={(v) => setResult(v as typeof result)}>
@@ -141,6 +144,20 @@ export function MatchEditDialog({ match, archetypes, open, onOpenChange }: Match
                 <SelectContent>
                   <SelectItem value="true">Yes</SelectItem>
                   <SelectItem value="false">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Platform</Label>
+              <Select value={platform} onValueChange={setPlatform}>
+                <SelectTrigger className="bg-muted/20 border-border/50 h-9 text-sm">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tcg-masters">TCG Masters</SelectItem>
+                  <SelectItem value="tcg-live">TCG Live</SelectItem>
+                  <SelectItem value="physical">Physical</SelectItem>
                 </SelectContent>
               </Select>
             </div>

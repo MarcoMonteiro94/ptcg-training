@@ -26,8 +26,8 @@ export async function getUserMatchLogs(
   }
   if (matchType === "tournament") {
     conditions.push(sql`${matchLogs.userTournamentId} IS NOT NULL`);
-  } else if (matchType === "online") {
-    conditions.push(sql`${matchLogs.userTournamentId} IS NULL`);
+  } else if (matchType === "tcg-masters" || matchType === "tcg-live" || matchType === "physical") {
+    conditions.push(eq(matchLogs.platform, matchType));
   }
 
   const where = and(...conditions);

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TierList } from "@/components/meta/tier-list";
 import { MetaBreakdown } from "@/components/meta/meta-breakdown";
+import { DataSourceInfo } from "@/components/meta/data-source-info";
 import { getMetaStats, getLatestMetaSnapshot } from "@/server/queries/meta";
 
 export const metadata: Metadata = {
@@ -59,6 +60,9 @@ export default async function MetaDashboardPage() {
           Standard format competitive analysis and tier rankings
         </p>
       </div>
+
+      {/* Data Source Info */}
+      <DataSourceInfo />
 
       {/* Tier List */}
       <Card className="glass-card">
