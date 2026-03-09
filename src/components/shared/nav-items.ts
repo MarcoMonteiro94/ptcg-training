@@ -1,6 +1,7 @@
 import {
   BarChart3,
   Grid3X3,
+  Home,
   Layers,
   BookOpen,
   Trophy,
@@ -10,7 +11,8 @@ import {
 } from "lucide-react";
 
 export const navItems = [
-  { href: "/", label: "Meta", sublabel: "Dashboard", icon: BarChart3 },
+  { href: "/", label: "Home", sublabel: "Dashboard", icon: Home },
+  { href: "/meta", label: "Meta", sublabel: "Tier List", icon: BarChart3 },
   { href: "/matchups", label: "Matchups", sublabel: "Matrix", icon: Grid3X3 },
   { href: "/decks", label: "Decks", sublabel: "Explorer", icon: Layers },
   { href: "/journal", label: "Journal", sublabel: "Battle Log", icon: BookOpen },
