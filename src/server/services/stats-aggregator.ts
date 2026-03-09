@@ -61,11 +61,26 @@ export async function generateMetaSnapshot(format: "standard" | "expanded" = "st
     .from(archetypes)
     .where(and(eq(archetypes.format, format), eq(archetypes.isActive, true)));
 
+  // Use previous snapshot's usage rates (from Limitless meta shares) if available
+  const previousSnapshot = await db
+    .select()
+    .from(metaSnapshots)
+    .where(eq(metaSnapshots.format, format))
+    .orderBy(sql`${metaSnapshots.date} desc`)
+    .limit(1);
+
+  const previousUsageMap = new Map<string, number>();
+  if (previousSnapshot[0]?.data) {
+    for (const entry of previousSnapshot[0].data) {
+      previousUsageMap.set(entry.archetype_id, entry.usage_rate);
+    }
+  }
+
+  // Fallback: calculate top-cut share from standings
   const totalStandings = await db
     .select({ count: sql<number>`count(*)` })
     .from(tournamentStandings);
-
-  const total = totalStandings[0]?.count || 1;
+  const totalTopCut = Number(totalStandings[0]?.count) || 1;
 
   // Gather raw data for each archetype
   const rawDataMap = new Map<string, ArchetypeRawData>();
@@ -120,7 +135,7 @@ export async function generateMetaSnapshot(format: "standard" | "expanded" = "st
     }
 
     const placementCount = Number(archStandings[0]?.count) || 0;
-    const usageRate = placementCount / Number(total);
+    const usageRate = previousUsageMap.get(arch.id) ?? (placementCount / totalTopCut);
     const winRate = totalGames > 0 ? totalWins / totalGames : 0;
 
     rawDataMap.set(arch.id, {

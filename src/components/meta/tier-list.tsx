@@ -17,10 +17,17 @@ interface TierListProps {
     id: string;
     name: string;
     slug: string;
-    tier: ArchetypeTier | null;
-    totalPlacements: number;
+    metaScore: number;
     justification?: string | null;
   }>;
+}
+
+function tierFromScore(score: number): ArchetypeTier {
+  if (score >= 55) return "S";
+  if (score >= 43) return "A";
+  if (score >= 30) return "B";
+  if (score >= 15) return "C";
+  return "D";
 }
 
 const tierConfig: Record<ArchetypeTier, { bg: string; text: string; glow: string }> = {
@@ -34,9 +41,16 @@ const tierConfig: Record<ArchetypeTier, { bg: string; text: string; glow: string
 const tiers: ArchetypeTier[] = ["S", "A", "B", "C", "D"];
 
 export function TierList({ archetypes }: TierListProps) {
+  const withTiers = archetypes.map((a) => ({
+    ...a,
+    tier: tierFromScore(a.metaScore),
+  }));
+
   const grouped = tiers.map((tier) => ({
     tier,
-    decks: archetypes.filter((a) => a.tier === tier),
+    decks: withTiers
+      .filter((a) => a.tier === tier)
+      .sort((a, b) => b.metaScore - a.metaScore),
   }));
 
   return (

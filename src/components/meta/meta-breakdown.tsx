@@ -1,8 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { getArchetypeImages, getPokemonImageUrl } from "@/lib/pokemon-images";
+
+type SortKey = "metaScore" | "usageRate" | "winRate" | "tier";
+type SortDir = "asc" | "desc";
 
 interface MetaBreakdownProps {
   data: Array<{
@@ -38,9 +42,76 @@ function getWinRateColor(wr: number): string {
   return "text-[oklch(0.80_0.15_25)]";
 }
 
+const tierOrder: Record<string, number> = { S: 5, A: 4, B: 3, C: 2, D: 1 };
+
+function tierFromScore(score: number): string {
+  if (score >= 55) return "S";
+  if (score >= 43) return "A";
+  if (score >= 30) return "B";
+  if (score >= 15) return "C";
+  return "D";
+}
+
+function SortHeader({
+  label,
+  sortKey,
+  activeKey,
+  activeDir,
+  onSort,
+  className,
+}: {
+  label: string;
+  sortKey: SortKey;
+  activeKey: SortKey;
+  activeDir: SortDir;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}) {
+  const isActive = activeKey === sortKey;
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(sortKey)}
+      className={cn(
+        "text-right cursor-pointer select-none transition-colors hover:text-muted-foreground",
+        isActive ? "text-foreground/70" : "text-muted-foreground/50",
+        className
+      )}
+    >
+      {label}
+      {isActive && (
+        <span className="ml-0.5">{activeDir === "desc" ? "\u2193" : "\u2191"}</span>
+      )}
+    </button>
+  );
+}
+
 export function MetaBreakdown({ data }: MetaBreakdownProps) {
-  const sorted = [...data].sort((a, b) => b.metaScore - a.metaScore);
-  const maxUsage = sorted[0]?.usageRate || 0.2;
+  const [sortKey, setSortKey] = useState<SortKey>("metaScore");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  function handleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  }
+
+  const sorted = [...data].sort((a, b) => {
+    let cmp: number;
+    switch (sortKey) {
+      case "tier":
+        cmp = (tierOrder[tierFromScore(a.metaScore)] ?? 0) - (tierOrder[tierFromScore(b.metaScore)] ?? 0);
+        break;
+      default:
+        cmp = a[sortKey] - b[sortKey];
+    }
+    return sortDir === "desc" ? -cmp : cmp;
+  });
+
+  const maxUsage = Math.max(...data.map((d) => d.usageRate), 0.2);
 
   if (sorted.length === 0) {
     return (
@@ -56,18 +127,19 @@ export function MetaBreakdown({ data }: MetaBreakdownProps) {
   return (
     <div className="space-y-1">
       {/* Header — hidden on mobile, shown on sm+ */}
-      <div className="hidden sm:flex items-center text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 px-1 pb-2">
-        <span className="w-7 shrink-0">Tier</span>
-        <span className="flex-1 pl-1">Archetype</span>
-        <span className="w-12 text-right">Score</span>
-        <span className="w-14 text-right">Usage</span>
-        <span className="w-14 text-right">WR</span>
+      <div className="hidden sm:flex items-center text-[10px] font-mono uppercase tracking-wider px-1 pb-2">
+        <SortHeader label="Tier" sortKey="tier" activeKey={sortKey} activeDir={sortDir} onSort={handleSort} className="w-7 shrink-0 text-left" />
+        <span className="flex-1 pl-1 text-muted-foreground/50">Archetype</span>
+        <SortHeader label="Score" sortKey="metaScore" activeKey={sortKey} activeDir={sortDir} onSort={handleSort} className="w-12" />
+        <SortHeader label="Usage" sortKey="usageRate" activeKey={sortKey} activeDir={sortDir} onSort={handleSort} className="w-14" />
+        <SortHeader label="WR" sortKey="winRate" activeKey={sortKey} activeDir={sortDir} onSort={handleSort} className="w-14" />
       </div>
 
       {sorted.map((entry, i) => {
+        const derivedTier = tierFromScore(entry.metaScore);
         const barWidth = Math.max(4, (entry.usageRate / maxUsage) * 100);
-        const barColor = tierColor[entry.tier] || tierColor.D;
-        const textColor = tierTextColor[entry.tier] || tierTextColor.D;
+        const barColor = tierColor[derivedTier] || tierColor.D;
+        const textColor = tierTextColor[derivedTier] || tierTextColor.D;
         const wrColor = getWinRateColor(entry.winRate);
 
         return (
@@ -78,7 +150,7 @@ export function MetaBreakdown({ data }: MetaBreakdownProps) {
           >
             {/* Tier badge */}
             <span className={cn("w-7 shrink-0 text-[11px] font-mono font-bold text-center", textColor)}>
-              {entry.tier}
+              {derivedTier}
             </span>
 
             {/* Name + usage bar */}

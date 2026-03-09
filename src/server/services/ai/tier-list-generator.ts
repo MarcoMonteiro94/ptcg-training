@@ -151,7 +151,7 @@ export async function generateAITierList(
     .sort((a, b) => b.totalPlacements - a.totalPlacements)
     .map(
       (a) =>
-        `- ${a.name} (id: ${a.id}): ${a.totalPlacements} placements (${totalPlacements > 0 ? Math.round((a.totalPlacements / totalPlacements) * 100) : 0}% usage), ${a.top8} top-8, ${a.top32} top-32, ${a.overallWinRate}% win rate, ${a.matchupSpread} matchup data points, meta score: ${scoreMap.get(a.id) ?? 0}/100`
+        `- ${a.name} (id: ${a.id}): ${a.totalPlacements} placements (${totalPlacements > 0 ? Math.round((a.totalPlacements / totalPlacements) * 100) : 0}% top-cut share), ${a.top8} top-8, ${a.top32} top-32, ${a.overallWinRate}% win rate, ${a.matchupSpread} matchup data points, meta score: ${scoreMap.get(a.id) ?? 0}/100`
     )
     .join("\n");
 

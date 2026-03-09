@@ -70,11 +70,16 @@ export default async function MetaDashboardPage() {
         </CardHeader>
         <CardContent className="px-4 sm:px-6">
           <TierList
-            archetypes={archetypeStats.map((a) => ({
-              ...a,
-              slug: a.slug,
-              justification: a.description,
-            }))}
+            archetypes={snapshotData.map((d) => {
+              const arch = archetypeStats.find((a) => a.id === d.archetypeId);
+              return {
+                id: d.archetypeId,
+                name: d.name,
+                slug: arch?.slug || d.archetypeId,
+                metaScore: d.metaScore,
+                justification: arch?.description,
+              };
+            })}
           />
         </CardContent>
       </Card>
