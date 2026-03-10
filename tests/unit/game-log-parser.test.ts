@@ -184,4 +184,81 @@ Alice's Charizard ex used Brave Wing.
     const charizardCount = result.playerCards.filter((c) => c === "Charizard ex").length;
     expect(charizardCount).toBe(1);
   });
+
+  it("identifies user via revealed opening hand and detects loss on concede", () => {
+    const log = `Setup
+blackTenergy chose heads for the opening coin flip.
+blackTenergy won the coin toss.
+blackTenergy decided to go second.
+blackTenergy drew 7 cards for the opening hand.
+- 7 drawn cards.
+xTitoSni drew 7 cards for the opening hand.
+- 7 drawn cards.
+   • Iono, Budew, Luminous Energy, Jamming Tower, Dreepy, Bloodmoon Ursaluna ex, Iono
+blackTenergy played Snorunt to the Active Spot.
+xTitoSni played Budew to the Active Spot.
+
+[playerName]'s Turn
+xTitoSni drew Dragapult ex.
+xTitoSni played Dreepy to the Bench.
+xTitoSni attached Luminous Energy to Dreepy on the Bench.
+xTitoSni ended their turn.
+
+[playerName]'s Turn
+blackTenergy drew a card.
+blackTenergy played Buddy-Buddy Poffin.
+blackTenergy played Arven.
+blackTenergy played Secret Box.
+blackTenergy played Munkidori to the Bench.
+blackTenergy attached Basic Darkness Energy to Snorunt in the Active Spot.
+You conceded. blackTenergy wins.`;
+    const result = parseGameLog(log);
+    expect(result.playerName).toBe("xTitoSni");
+    expect(result.opponentName).toBe("blackTenergy");
+    expect(result.result).toBe("loss");
+    expect(result.wentFirst).toBe(true); // blackTenergy chose second → xTitoSni went first
+  });
+
+  it("detects win when opponent concedes with 'Opponent conceded' format", () => {
+    const log = `Setup
+Alice chose heads for the opening coin flip.
+Alice won the coin toss.
+Alice decided to go first.
+Alice drew 7 cards for the opening hand.
+- 7 drawn cards.
+   • Charizard ex, Arcanine, Fire Energy, Boss's Orders, Iono, Ultra Ball, Rare Candy
+Bob drew 7 cards for the opening hand.
+- 7 drawn cards.
+
+[playerName]'s Turn
+Alice drew a card.
+Alice played Charizard ex to the Active Spot.
+
+[playerName]'s Turn
+Bob drew a card.
+Bob played Pikachu to the Active Spot.
+Opponent conceded. Alice wins.`;
+    const result = parseGameLog(log);
+    expect(result.playerName).toBe("Alice");
+    expect(result.result).toBe("win");
+    expect(result.wentFirst).toBe(true);
+  });
+
+  it("detects win via prize completion", () => {
+    const log = `Setup
+Alice drew 7 cards for the opening hand.
+- 7 drawn cards.
+   • Charizard ex, Arcanine, Fire Energy, Boss's Orders, Iono, Ultra Ball, Rare Candy
+Bob drew 7 cards for the opening hand.
+- 7 drawn cards.
+
+Turn 1 - Alice
+Alice played Charizard ex from hand.
+Turn 2 - Bob
+Bob played Pikachu from hand.
+Alice took all Prize cards.`;
+    const result = parseGameLog(log);
+    expect(result.playerName).toBe("Alice");
+    expect(result.result).toBe("win");
+  });
 });

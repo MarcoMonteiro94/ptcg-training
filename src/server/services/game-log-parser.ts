@@ -100,12 +100,29 @@ function parsePtcgLiveLog(logText: string, source: LogSource): ParsedGameLog {
 
   // Step 1: Detect player names from the log
   const names = detectPlayerNames(lines);
-  if (names.length >= 2) {
+
+  // Step 1b: Identify which player is the user.
+  // In PTCG Live exports, the user's opening hand is revealed (bullet points
+  // with card names appear right after their "drew N cards" line) while the
+  // opponent's hand stays hidden. Also, "You conceded" / "You won" uses "You"
+  // to refer to the file owner.
+  const userIdentity = detectUserIdentity(lines, names);
+
+  if (userIdentity && names.length >= 2) {
+    result.playerName = userIdentity;
+    result.opponentName = names.find((n) => n !== userIdentity) ?? names[1];
+  } else if (names.length >= 2) {
     result.playerName = names[0];
     result.opponentName = names[1];
   } else if (names.length === 1) {
     result.playerName = names[0];
   }
+
+  // Resolve pronouns: "You" → playerName, "Opponent" → opponentName
+  const isPlayer = (name: string) =>
+    name === result.playerName || /^you$/i.test(name);
+  const isOpponent = (name: string) =>
+    name === result.opponentName || /^opponent$/i.test(name);
 
   const playerCardSet = new Set<string>();
   const opponentCardSet = new Set<string>();
@@ -129,10 +146,10 @@ function parsePtcgLiveLog(logText: string, source: LogSource): ParsedGameLog {
         const decider = goMatch[1].trim();
         const choice = goMatch[2].toLowerCase();
         if (choice === "first") {
-          result.wentFirst = decider === result.playerName;
+          result.wentFirst = isPlayer(decider);
         } else {
           // Decided to go second means the OTHER player goes first
-          result.wentFirst = decider !== result.playerName;
+          result.wentFirst = !isPlayer(decider);
         }
       }
 
@@ -152,8 +169,8 @@ function parsePtcgLiveLog(logText: string, source: LogSource): ParsedGameLog {
       for (const rawName of cardNames) {
         const card = cleanCardName(rawName);
         if (card && !isIgnoredToken(card)) {
-          const targetSet = currentTurnPlayer === result.playerName ? playerCardSet :
-                            currentTurnPlayer === result.opponentName ? opponentCardSet : null;
+          const targetSet = currentTurnPlayer && isPlayer(currentTurnPlayer) ? playerCardSet :
+                            currentTurnPlayer && isOpponent(currentTurnPlayer) ? opponentCardSet : null;
           if (targetSet) targetSet.add(card);
         }
       }
@@ -166,7 +183,7 @@ function parsePtcgLiveLog(logText: string, source: LogSource): ParsedGameLog {
       const actor = playedMatch[1].trim();
       const card = cleanCardName(playedMatch[2]);
       if (card && !isIgnoredToken(card)) {
-        addCardForActor(actor, card, result, playerCardSet, opponentCardSet);
+        addCardForActor(actor, card, result, playerCardSet, opponentCardSet, isPlayer, isOpponent);
       }
       continue;
     }
@@ -178,10 +195,10 @@ function parsePtcgLiveLog(logText: string, source: LogSource): ParsedGameLog {
       const fromCard = cleanCardName(evolvedMatch[2]);
       const toCard = cleanCardName(evolvedMatch[3]);
       if (fromCard && !isIgnoredToken(fromCard)) {
-        addCardForActor(actor, fromCard, result, playerCardSet, opponentCardSet);
+        addCardForActor(actor, fromCard, result, playerCardSet, opponentCardSet, isPlayer, isOpponent);
       }
       if (toCard && !isIgnoredToken(toCard)) {
-        addCardForActor(actor, toCard, result, playerCardSet, opponentCardSet);
+        addCardForActor(actor, toCard, result, playerCardSet, opponentCardSet, isPlayer, isOpponent);
       }
       continue;
     }
@@ -192,7 +209,7 @@ function parsePtcgLiveLog(logText: string, source: LogSource): ParsedGameLog {
       const actor = attachedMatch[1].trim();
       const card = cleanCardName(attachedMatch[2]);
       if (card && !isIgnoredToken(card)) {
-        addCardForActor(actor, card, result, playerCardSet, opponentCardSet);
+        addCardForActor(actor, card, result, playerCardSet, opponentCardSet, isPlayer, isOpponent);
       }
       continue;
     }
@@ -203,7 +220,7 @@ function parsePtcgLiveLog(logText: string, source: LogSource): ParsedGameLog {
       const actor = usedMatch[1].trim();
       const card = cleanCardName(usedMatch[2]);
       if (card && !isIgnoredToken(card)) {
-        addCardForActor(actor, card, result, playerCardSet, opponentCardSet);
+        addCardForActor(actor, card, result, playerCardSet, opponentCardSet, isPlayer, isOpponent);
       }
       continue;
     }
@@ -214,32 +231,32 @@ function parsePtcgLiveLog(logText: string, source: LogSource): ParsedGameLog {
       const actor = activeMatch[1].trim();
       const card = cleanCardName(activeMatch[2]);
       if (card && !isIgnoredToken(card)) {
-        addCardForActor(actor, card, result, playerCardSet, opponentCardSet);
+        addCardForActor(actor, card, result, playerCardSet, opponentCardSet, isPlayer, isOpponent);
       }
       continue;
     }
 
-    // Detect win: "Opponent conceded. PlayerName wins."
+    // Detect win: "Opponent conceded. PlayerName wins." / "You conceded. X wins."
     const concedeWinMatch = /(?:Opponent\s+conceded|.+?\s+conceded)\.\s*(.+?)\s+wins?\.?/i.exec(line);
     if (concedeWinMatch) {
       const winner = concedeWinMatch[1].trim();
-      result.result = winner === result.playerName ? "win" : "loss";
+      result.result = isPlayer(winner) ? "win" : "loss";
       continue;
     }
 
-    // Detect win: "PlayerName won the game"
-    const wonMatch = /^(.+?)\s+(?:won\s+the\s+game|has\s+won|wins?!)/i.exec(line);
+    // Detect win: "PlayerName won the game" / "You won"
+    const wonMatch = /^(.+?)\s+(?:won\s+the\s+game|has\s+won|wins?[.!]?$)/i.exec(line);
     if (wonMatch) {
       const winner = wonMatch[1].trim();
-      result.result = winner === result.playerName ? "win" : "loss";
+      result.result = isPlayer(winner) ? "win" : "loss";
       continue;
     }
 
-    // Detect concede standalone
+    // Detect concede standalone: "You conceded" / "PlayerName forfeited"
     const concedeMatch = /^(.+?)\s+(?:conceded|forfeited)/i.exec(line);
     if (concedeMatch) {
       const loser = concedeMatch[1].trim();
-      result.result = loser === result.playerName ? "loss" : "win";
+      result.result = isPlayer(loser) ? "loss" : "win";
       continue;
     }
 
@@ -253,7 +270,7 @@ function parsePtcgLiveLog(logText: string, source: LogSource): ParsedGameLog {
     const prizeWinMatch = /^(.+?)\s+took\s+all\s+Prize\s+cards/i.exec(line);
     if (prizeWinMatch) {
       const winner = prizeWinMatch[1].trim();
-      result.result = winner === result.playerName ? "win" : "loss";
+      result.result = isPlayer(winner) ? "win" : "loss";
       continue;
     }
   }
@@ -457,6 +474,40 @@ function calculateTcgMastersConfidence(parsed: ParsedGameLog, p1Prizes: number, 
   return Math.min(1, Math.max(0, score));
 }
 
+/**
+ * Determines which of the detected player names belongs to the user (file owner).
+ *
+ * Heuristics:
+ * 1. "You conceded/won" → the player whose "drew N cards" line is followed
+ *    by revealed bullet-point cards is the user.
+ * 2. In PTCG Live exports, only the user's opening hand is shown as bullet
+ *    points after "drew N cards for the opening hand".
+ */
+function detectUserIdentity(lines: string[], names: string[]): string | null {
+  if (names.length < 2) return null;
+
+  // Heuristic: the player whose opening hand draw is followed by bullet-point
+  // card names is the user (only your hand is revealed in exports).
+  let lastDrawer: string | null = null;
+  for (const line of lines) {
+    const drawMatch = /^(.+?)\s+drew\s+\d+\s+cards\s+for\s+the\s+opening\s+hand/i.exec(line);
+    if (drawMatch) {
+      lastDrawer = drawMatch[1].trim();
+      continue;
+    }
+    // If we see card bullet points right after a draw, that player's hand was revealed
+    if (lastDrawer && /^\s*[•·]\s+/.test(line)) {
+      if (names.includes(lastDrawer)) return lastDrawer;
+    }
+    // Reset if we hit a non-bullet, non-draw line (e.g. "- 7 drawn cards.")
+    if (lastDrawer && !line.startsWith("-") && !/^\s*[•·]/.test(line)) {
+      lastDrawer = null;
+    }
+  }
+
+  return null;
+}
+
 function detectPlayerNames(lines: string[]): string[] {
   const nameCandidates = new Map<string, number>();
 
@@ -540,11 +591,15 @@ function addCardForActor(
   card: string,
   parsed: ParsedGameLog,
   playerSet: Set<string>,
-  opponentSet: Set<string>
+  opponentSet: Set<string>,
+  isPlayerFn?: (name: string) => boolean,
+  isOpponentFn?: (name: string) => boolean
 ) {
-  if (actor === parsed.playerName) {
+  const playerMatch = isPlayerFn ? isPlayerFn(actor) : actor === parsed.playerName;
+  const opponentMatch = isOpponentFn ? isOpponentFn(actor) : actor === parsed.opponentName;
+  if (playerMatch) {
     playerSet.add(card);
-  } else if (actor === parsed.opponentName) {
+  } else if (opponentMatch) {
     opponentSet.add(card);
   }
 }
