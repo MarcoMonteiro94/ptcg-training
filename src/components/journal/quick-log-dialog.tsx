@@ -166,14 +166,15 @@ export function QuickLogDialog({ archetypes }: QuickLogDialogProps) {
       toast.success("Match logged!");
       router.refresh();
 
+      // Reset form state
+      setOpponentArchetypeId("");
+      setResult("win");
+      setWentFirst("");
+      setNotes("");
+      setReplayFileContent(null);
+
       if (closeAfter) {
         setOpen(false);
-      } else {
-        setOpponentArchetypeId("");
-        setResult("win");
-        setWentFirst("");
-        setNotes("");
-        setReplayFileContent(null);
       }
     });
   }
@@ -281,18 +282,18 @@ export function QuickLogDialog({ archetypes }: QuickLogDialogProps) {
       toast.success("Match logged from game log!");
       router.refresh();
 
+      // Reset paste state
+      setLogText("");
+      setParseResult(null);
+      setShowLog(true);
+      setOverridePlayer("");
+      setOverrideOpponent("");
+      setOverrideResult("");
+      setSelectedIdentity(null);
+      setResolvedCards(null);
+
       if (closeAfter) {
         setOpen(false);
-      } else {
-        // Reset paste state for next log
-        setLogText("");
-        setParseResult(null);
-        setShowLog(true);
-        setOverridePlayer("");
-        setOverrideOpponent("");
-        setOverrideResult("");
-        setSelectedIdentity(null);
-        setResolvedCards(null);
       }
     });
   }
